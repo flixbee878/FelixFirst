@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, "claude/type-master-game-73L2j"]
   workflow_dispatch:
 
 permissions:
