@@ -24,7 +24,7 @@ export const HomePage = () => {
               lineHeight: 1,
             }}
           >
-            TYPE MASTER
+            TYPE KNIGHT
           </h1>
           <p
             style={{

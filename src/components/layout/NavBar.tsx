@@ -39,7 +39,7 @@ export const NavBar = () => {
           letterSpacing: '2px',
           textShadow: '2px 2px 0px #000, -1px -1px 0px #FF8C00',
         }}>
-          TYPE MASTER
+          TYPE KNIGHT
         </span>
       </Link>
 

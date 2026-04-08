@@ -5,8 +5,8 @@ import { BATTLE_TOKEN_BASE, BATTLE_TOKEN_PER_RANK } from '../constants/avatarPar
 import type { AvatarConfig } from '../types/avatar';
 import { DEFAULT_AVATAR } from '../types/avatar';
 
-const STORAGE_KEY = 'type_master_profile';
-const AVATAR_KEY = 'type_master_avatar';
+const STORAGE_KEY = 'type_knight_profile';
+const AVATAR_KEY = 'type_knight_avatar';
 
 const defaultProfile: PlayerProfile = {
   rank: 1,
