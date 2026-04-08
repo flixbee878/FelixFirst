@@ -1,8 +1,10 @@
+import { Link } from 'react-router-dom';
 import { useGame } from '../store/GameContext';
 import { getRankName, getRankColor, RANK_NAMES, WINS_PER_RANK, RANK_COLORS } from '../constants/ranks';
+import { AvatarSVG } from '../components/avatar/AvatarSVG';
 
 export const ProfilePage = () => {
-  const { profile, resetProfile } = useGame();
+  const { profile, avatarConfig, resetProfile } = useGame();
   const rankColor = getRankColor(profile.rank);
   const winRate = profile.totalWins + profile.totalLosses > 0
     ? Math.round((profile.totalWins / (profile.totalWins + profile.totalLosses)) * 100)
@@ -24,7 +26,7 @@ export const ProfilePage = () => {
         </h1>
       </div>
 
-      {/* Current rank card */}
+      {/* Avatar + rank card */}
       <div style={{
         background: rankColor,
         border: '4px solid #000',
@@ -32,9 +34,24 @@ export const ProfilePage = () => {
         padding: '24px',
         marginBottom: '20px',
         boxShadow: '6px 6px 0px #000',
-        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '20px',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
       }}>
-        <div style={{ fontSize: '3rem', marginBottom: '8px' }}>🏆</div>
+        {/* Avatar preview */}
+        <div style={{
+          background: 'linear-gradient(180deg, #87CEEB, #4CAF50)',
+          border: '3px solid #000',
+          borderRadius: '16px',
+          padding: '8px 12px 0',
+          boxShadow: '3px 3px 0px #000',
+        }}>
+          <AvatarSVG config={avatarConfig} size={110} animate="idle" />
+        </div>
+        <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: '4px' }}>🏆</div>
         <div style={{
           fontFamily: '"Bangers", cursive',
           fontSize: '1.2rem',
@@ -83,6 +100,31 @@ export const ProfilePage = () => {
             ))}
           </div>
         </div>
+        </div>{/* end textAlign center */}
+      </div>
+
+      {/* Token balance */}
+      <div style={{
+        background: '#FFE234',
+        border: '4px solid #000',
+        borderRadius: '14px',
+        padding: '12px 20px',
+        marginBottom: '20px',
+        boxShadow: '4px 4px 0px #000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '10px',
+      }}>
+        <div style={{ fontFamily: '"Bangers", cursive', fontSize: '1.6rem', letterSpacing: '1px' }}>
+          🪙 {profile.tokens} Tokens
+        </div>
+        <Link to="/avatar">
+          <button className="cartoon-btn" style={{ background: '#1A1A2E', color: '#FFE234', fontSize: '0.9rem' }}>
+            🎨 Customize Avatar →
+          </button>
+        </Link>
       </div>
 
       {/* Stats */}

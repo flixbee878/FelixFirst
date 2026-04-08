@@ -42,6 +42,8 @@ export interface PlayerProfile {
   winsInCurrentRank: number;
   totalWins: number;
   totalLosses: number;
+  tokens: number;
+  unlockedItems: string[];
 }
 
 export interface TypingResult {

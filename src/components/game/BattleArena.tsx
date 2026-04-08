@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../store/GameContext';
 import { useGameBattle } from '../../hooks/useGameBattle';
 import { RobotSprite } from './RobotSprite';
-import { PlayerSprite } from './PlayerSprite';
+import { AvatarSVG } from '../avatar/AvatarSVG';
 import { HealthBar } from './HealthBar';
+import { BATTLE_TOKEN_BASE, BATTLE_TOKEN_PER_RANK } from '../../constants/avatarParts';
 import { AttackWord } from './AttackWord';
 import { BattleLog } from './BattleLog';
 import { VictoryScreen } from './VictoryScreen';
@@ -15,17 +16,18 @@ const ROBOT_COLORS = ['#607D8B', '#f44336', '#9C27B0', '#FF9800', '#009688', '#E
 
 export const BattleArena = () => {
   const navigate = useNavigate();
-  const { profile, recordWin, recordLoss } = useGame();
+  const { profile, avatarConfig, recordWin, recordLoss } = useGame();
   const robotColor = ROBOT_COLORS[(profile.rank - 1) % ROBOT_COLORS.length];
   const [taunt, setTaunt] = useState(getRandomTaunt());
   const recordedRef = useRef(false);
+  const tokensEarned = BATTLE_TOKEN_BASE + profile.rank * BATTLE_TOKEN_PER_RANK;
 
   const { state, startBattle, submitWord, handleMiss, resetBattle } = useGameBattle({
     playerRank: profile.rank,
     onWin: () => {
       if (!recordedRef.current) {
         recordedRef.current = true;
-        recordWin();
+        recordWin(tokensEarned);
       }
     },
     onLose: () => {
@@ -161,7 +163,12 @@ export const BattleArena = () => {
           >
             {/* Player side */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <PlayerSprite state={playerSpriteState} size={130} />
+              <AvatarSVG config={avatarConfig} size={120} animate={
+                playerSpriteState === 'attacking' ? 'attack'
+                : playerSpriteState === 'hurt' ? 'hurt'
+                : playerSpriteState === 'defeated' ? 'none'
+                : 'idle'
+              } />
               {state.phase === 'player_attack_anim' && state.lastDamage > 0 && (
                 <div style={{
                   fontFamily: '"Bangers", cursive',

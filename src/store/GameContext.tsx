@@ -1,21 +1,26 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { usePlayerProfile } from '../hooks/usePlayerProfile';
 import type { PlayerProfile } from '../types';
+import type { AvatarConfig } from '../types/avatar';
 
 interface GameContextValue {
   profile: PlayerProfile;
-  recordWin: () => void;
+  avatarConfig: AvatarConfig;
+  recordWin: (tokensEarned?: number) => void;
   recordLoss: () => void;
+  unlockItem: (itemId: string, cost: number) => void;
+  updateAvatar: (config: AvatarConfig) => void;
   resetProfile: () => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-  const { profile, recordWin, recordLoss, resetProfile } = usePlayerProfile();
+  const { profile, avatarConfig, recordWin, recordLoss, unlockItem, updateAvatar, resetProfile } =
+    usePlayerProfile();
 
   return (
-    <GameContext.Provider value={{ profile, recordWin, recordLoss, resetProfile }}>
+    <GameContext.Provider value={{ profile, avatarConfig, recordWin, recordLoss, unlockItem, updateAvatar, resetProfile }}>
       {children}
     </GameContext.Provider>
   );
