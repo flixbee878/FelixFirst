@@ -6,21 +6,24 @@ import type { AvatarConfig } from '../types/avatar';
 interface GameContextValue {
   profile: PlayerProfile;
   avatarConfig: AvatarConfig;
+  isPro: boolean;
+  canClaimMonthly: boolean;
   recordWin: (tokensEarned?: number) => void;
   recordLoss: () => void;
   unlockItem: (itemId: string, cost: number) => void;
   updateAvatar: (config: AvatarConfig) => void;
   resetProfile: () => void;
+  activatePro: (days: number) => void;
+  claimMonthlyTokens: () => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-  const { profile, avatarConfig, recordWin, recordLoss, unlockItem, updateAvatar, resetProfile } =
-    usePlayerProfile();
+  const hook = usePlayerProfile();
 
   return (
-    <GameContext.Provider value={{ profile, avatarConfig, recordWin, recordLoss, unlockItem, updateAvatar, resetProfile }}>
+    <GameContext.Provider value={hook}>
       {children}
     </GameContext.Provider>
   );

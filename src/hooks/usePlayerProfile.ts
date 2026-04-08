@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { PlayerProfile } from '../types';
 import { WINS_PER_RANK } from '../constants/ranks';
-import { BATTLE_TOKEN_BASE, BATTLE_TOKEN_PER_RANK } from '../constants/avatarParts';
+import { BATTLE_TOKEN_BASE, BATTLE_TOKEN_PER_RANK, PRO_MONTHLY_TOKENS } from '../constants/avatarParts';
 import type { AvatarConfig } from '../types/avatar';
 import { DEFAULT_AVATAR } from '../types/avatar';
 
@@ -15,6 +15,9 @@ const defaultProfile: PlayerProfile = {
   totalLosses: 0,
   tokens: 0,
   unlockedItems: [],
+  isPro: false,
+  proExpiresAt: null,
+  proLastMonthlyGrant: null,
 };
 
 const loadProfile = (): PlayerProfile => {
@@ -22,12 +25,14 @@ const loadProfile = (): PlayerProfile => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const p = JSON.parse(stored);
-      // migrate old saves that don't have tokens/unlockedItems
       return {
         ...defaultProfile,
         ...p,
         tokens: p.tokens ?? 0,
         unlockedItems: p.unlockedItems ?? [],
+        isPro: p.isPro ?? false,
+        proExpiresAt: p.proExpiresAt ?? null,
+        proLastMonthlyGrant: p.proLastMonthlyGrant ?? null,
       };
     }
   } catch { /* ignore */ }
@@ -54,6 +59,18 @@ export const usePlayerProfile = () => {
   const [profile, setProfile] = useState<PlayerProfile>(loadProfile);
   const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(loadAvatar);
 
+  // Derived Pro status — pro is valid only if the expiry is in the future
+  const isPro = useMemo(
+    () => profile.isPro && profile.proExpiresAt !== null && profile.proExpiresAt > Date.now(),
+    [profile.isPro, profile.proExpiresAt],
+  );
+
+  const canClaimMonthly = useMemo(() => {
+    if (!isPro) return false;
+    const last = profile.proLastMonthlyGrant ?? 0;
+    return Date.now() - last >= 30 * 24 * 60 * 60 * 1000;
+  }, [isPro, profile.proLastMonthlyGrant]);
+
   const recordWin = useCallback((tokensEarned?: number) => {
     setProfile((prev) => {
       const newWins = prev.winsInCurrentRank + 1;
@@ -61,7 +78,7 @@ export const usePlayerProfile = () => {
       const earned = tokensEarned ?? (BATTLE_TOKEN_BASE + prev.rank * BATTLE_TOKEN_PER_RANK);
       const updated: PlayerProfile = {
         ...prev,
-        rank: rankUp ? prev.rank + 1 : prev.rank,
+        rank: rankUp ? Math.min(prev.rank + 1, 7) : prev.rank,
         winsInCurrentRank: rankUp ? 0 : newWins,
         totalWins: prev.totalWins + 1,
         tokens: prev.tokens + earned,
@@ -104,5 +121,39 @@ export const usePlayerProfile = () => {
     setAvatarConfig(DEFAULT_AVATAR);
   }, []);
 
-  return { profile, avatarConfig, recordWin, recordLoss, unlockItem, updateAvatar, resetProfile };
+  // days=14 for trial, 30 for monthly, 365 for annual
+  const activatePro = useCallback((days: number) => {
+    setProfile((prev) => {
+      const now = Date.now();
+      const updated: PlayerProfile = {
+        ...prev,
+        isPro: true,
+        proExpiresAt: now + days * 24 * 60 * 60 * 1000,
+      };
+      saveProfile(updated);
+      return updated;
+    });
+  }, []);
+
+  const claimMonthlyTokens = useCallback(() => {
+    setProfile((prev) => {
+      const now = Date.now();
+      const last = prev.proLastMonthlyGrant ?? 0;
+      if (now - last < 30 * 24 * 60 * 60 * 1000) return prev;
+      const updated = {
+        ...prev,
+        tokens: prev.tokens + PRO_MONTHLY_TOKENS,
+        proLastMonthlyGrant: now,
+      };
+      saveProfile(updated);
+      return updated;
+    });
+  }, []);
+
+  return {
+    profile, avatarConfig,
+    isPro, canClaimMonthly,
+    recordWin, recordLoss, unlockItem, updateAvatar, resetProfile,
+    activatePro, claimMonthlyTokens,
+  };
 };

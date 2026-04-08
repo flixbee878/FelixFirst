@@ -5,7 +5,7 @@ import { useGameBattle } from '../../hooks/useGameBattle';
 import { RobotSprite } from './RobotSprite';
 import { AvatarSVG } from '../avatar/AvatarSVG';
 import { HealthBar } from './HealthBar';
-import { BATTLE_TOKEN_BASE, BATTLE_TOKEN_PER_RANK } from '../../constants/avatarParts';
+import { BATTLE_TOKEN_BASE, BATTLE_TOKEN_PER_RANK, PRO_BATTLE_BONUS } from '../../constants/avatarParts';
 import { AttackWord } from './AttackWord';
 import { BattleLog } from './BattleLog';
 import { VictoryScreen } from './VictoryScreen';
@@ -16,11 +16,11 @@ const ROBOT_COLORS = ['#607D8B', '#f44336', '#9C27B0', '#FF9800', '#009688', '#E
 
 export const BattleArena = () => {
   const navigate = useNavigate();
-  const { profile, avatarConfig, recordWin, recordLoss } = useGame();
+  const { profile, avatarConfig, isPro, recordWin, recordLoss } = useGame();
   const robotColor = ROBOT_COLORS[(profile.rank - 1) % ROBOT_COLORS.length];
   const [taunt, setTaunt] = useState(getRandomTaunt());
   const recordedRef = useRef(false);
-  const tokensEarned = BATTLE_TOKEN_BASE + profile.rank * BATTLE_TOKEN_PER_RANK;
+  const tokensEarned = BATTLE_TOKEN_BASE + profile.rank * BATTLE_TOKEN_PER_RANK + (isPro ? PRO_BATTLE_BONUS : 0);
 
   const { state, startBattle, submitWord, handleMiss, resetBattle } = useGameBattle({
     playerRank: profile.rank,
@@ -259,6 +259,7 @@ export const BattleArena = () => {
       {(isVictory || isDefeat) && (
         <VictoryScreen
           won={isVictory}
+          tokensEarned={isVictory ? tokensEarned : 0}
           onPlayAgain={handlePlayAgain}
           onGoHome={handleGoHome}
         />

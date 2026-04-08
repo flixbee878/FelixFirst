@@ -1,17 +1,16 @@
 import { useGame } from '../../store/GameContext';
 import { getRankName, getRankColor, WINS_PER_RANK } from '../../constants/ranks';
-import { BATTLE_TOKEN_BASE, BATTLE_TOKEN_PER_RANK } from '../../constants/avatarParts';
 
 interface VictoryScreenProps {
   won: boolean;
+  tokensEarned: number;
   onPlayAgain: () => void;
   onGoHome: () => void;
 }
 
-export const VictoryScreen = ({ won, onPlayAgain, onGoHome }: VictoryScreenProps) => {
-  const { profile } = useGame();
+export const VictoryScreen = ({ won, tokensEarned, onPlayAgain, onGoHome }: VictoryScreenProps) => {
+  const { profile, isPro } = useGame();
   const rankColor = getRankColor(profile.rank);
-  const tokensEarned = won ? BATTLE_TOKEN_BASE + profile.rank * BATTLE_TOKEN_PER_RANK : 0;
 
   return (
     <div style={{
@@ -72,7 +71,7 @@ export const VictoryScreen = ({ won, onPlayAgain, onGoHome }: VictoryScreenProps
                 +{tokensEarned} TOKENS!
               </div>
               <div style={{ fontFamily: '"Fredoka One", cursive', fontSize: '0.75rem', color: '#333' }}>
-                Use them to unlock avatar items!
+                {isPro ? '⚔️ Pro bonus included!' : 'Use them to unlock avatar items!'}
               </div>
             </div>
           </div>

@@ -44,6 +44,9 @@ export interface PlayerProfile {
   totalLosses: number;
   tokens: number;
   unlockedItems: string[];
+  isPro: boolean;
+  proExpiresAt: number | null;        // Unix timestamp ms
+  proLastMonthlyGrant: number | null; // Unix timestamp ms
 }
 
 export interface TypingResult {

@@ -33,6 +33,17 @@ function HairBack({ style, color }: { style: string; color: string }) {
           <ellipse cx="74" cy="64" rx="6" ry="8" fill={color} stroke="#000" strokeWidth="1.5" />
         </g>
       );
+    case 'dreadlocks':
+      return (
+        <g>
+          <rect x="23" y="30" width="7" height="54" rx="3" fill={color} stroke="#000" strokeWidth="1" />
+          <rect x="31" y="30" width="7" height="58" rx="3" fill={color} stroke="#000" strokeWidth="1" />
+          <rect x="39" y="30" width="7" height="50" rx="3" fill={color} stroke="#000" strokeWidth="1" />
+          <rect x="53" y="30" width="7" height="54" rx="3" fill={color} stroke="#000" strokeWidth="1" />
+          <rect x="61" y="30" width="7" height="58" rx="3" fill={color} stroke="#000" strokeWidth="1" />
+          <rect x="69" y="30" width="7" height="50" rx="3" fill={color} stroke="#000" strokeWidth="1" />
+        </g>
+      );
     default:
       return null;
   }
@@ -264,38 +275,102 @@ function HairFront({ style, color }: { style: string; color: string }) {
           <path d="M 30 30 C 26 18, 36 8, 50 8 C 64 8, 74 18, 70 30 C 64 28, 58 26, 50 26 C 42 26, 36 28, 30 30 Z" fill={color} {...s} />
         </g>
       );
+    case 'space-buns':
+      return (
+        <g>
+          {/* Base cap connecting buns */}
+          <rect x="28" y="22" width="44" height="12" rx="0" fill={color} />
+          {/* Left bun */}
+          <circle cx="28" cy="22" r="13" fill={color} stroke="#000" strokeWidth="2" />
+          {/* Right bun */}
+          <circle cx="72" cy="22" r="13" fill={color} stroke="#000" strokeWidth="2" />
+          {/* Hair ties */}
+          <ellipse cx="28" cy="34" rx="10" ry="3.5" fill="#333" stroke="#000" strokeWidth="1" />
+          <ellipse cx="72" cy="34" rx="10" ry="3.5" fill="#333" stroke="#000" strokeWidth="1" />
+        </g>
+      );
+    case 'dreadlocks':
+      return (
+        <g>
+          {/* Cap */}
+          <path d="M 28 30 C 24 18, 36 8, 50 8 C 64 8, 76 18, 72 30 C 66 28, 58 26, 50 26 C 42 26, 34 28, 28 30 Z" fill={color} {...s} />
+          {/* Front loc strands */}
+          <rect x="26" y="28" width="7" height="40" rx="3" fill={color} stroke="#000" strokeWidth="1" />
+          <rect x="68" y="28" width="7" height="40" rx="3" fill={color} stroke="#000" strokeWidth="1" />
+        </g>
+      );
     default:
       return null;
   }
 }
 
 // ─── Shirt ──────────────────────────────────────────────────────────────────
-const SHIRT_CONFIGS: Record<string, { main: string; accent?: string; label?: string }> = {
-  'tee-blue': { main: '#007AFF' },
-  'tee-red': { main: '#FF3B30' },
-  'tee-green': { main: '#34C759' },
-  'hoodie-grey': { main: '#9CA3AF', accent: '#6B7280' },
+const SHIRT_CONFIGS: Record<string, { main: string; accent?: string }> = {
+  'tee-blue':     { main: '#007AFF' },
+  'tee-red':      { main: '#FF3B30' },
+  'tee-green':    { main: '#34C759' },
+  'tee-yellow':   { main: '#FBBF24' },
+  'tee-purple':   { main: '#7C3AED' },
+  'tank-pink':    { main: '#FF2D92' },
+  'striped':      { main: '#F1F5F9', accent: '#3B82F6' },
+  'hoodie-grey':  { main: '#9CA3AF', accent: '#6B7280' },
   'hoodie-black': { main: '#1f2937', accent: '#111827' },
-  'jacket-orange': { main: '#FF8C00', accent: '#FF6000' },
-  'tank-pink': { main: '#FF2D92' },
-  'ninja-black': { main: '#1a1a1a', accent: '#2a2a2a' },
-  'armor': { main: '#607D8B', accent: '#455A64' },
+  'jacket-denim': { main: '#4B7BB5', accent: '#2D5A8E' },
+  'jacket-orange':{ main: '#FF8C00', accent: '#FF6000' },
+  'varsity':      { main: '#1a1a2e', accent: '#FFD700' },
+  'ninja-black':  { main: '#1a1a1a', accent: '#2a2a2a' },
+  'knight-tunic': { main: '#8B7355', accent: '#DAA520' },
+  'wizard-robe':  { main: '#4C1D95', accent: '#C4B5FD' },
+  'armor':        { main: '#607D8B', accent: '#455A64' },
+  'dragon-suit':  { main: '#7F1D1D', accent: '#EF4444' },
 };
 
 function Shirt({ shirtId, skinColor }: { shirtId: string; skinColor: string }) {
   const cfg = SHIRT_CONFIGS[shirtId] ?? { main: '#007AFF' };
-  const isHoodie = shirtId.startsWith('hoodie');
-  const isNinja = shirtId === 'ninja-black';
-  const isArmor = shirtId === 'armor';
+  const isHoodie  = shirtId.startsWith('hoodie');
+  const isNinja   = shirtId === 'ninja-black';
+  const isArmor   = shirtId === 'armor';
+  const isVarsity = shirtId === 'varsity';
+  const isDragon  = shirtId === 'dragon-suit';
+  const isKnight  = shirtId === 'knight-tunic';
+  const isWizard  = shirtId === 'wizard-robe';
+  const isDenim   = shirtId === 'jacket-denim';
+  const isStriped = shirtId === 'striped';
+  const armColor  = isVarsity ? (cfg.accent ?? cfg.main) : cfg.main;
 
   return (
     <g>
+      {/* Wizard robe extends longer */}
+      {isWizard && (
+        <rect x="26" y="66" width="48" height="60" rx="8" fill={cfg.main} stroke="#000" strokeWidth="2" />
+      )}
+
       {/* Body */}
       <rect x="28" y="66" width="44" height="38" rx="6" fill={cfg.main} stroke="#000" strokeWidth="2" />
+
+      {/* Striped shirt horizontal lines */}
+      {isStriped && (
+        <>
+          <rect x="28" y="73" width="44" height="5" fill={cfg.accent} opacity="0.5" />
+          <rect x="28" y="83" width="44" height="5" fill={cfg.accent} opacity="0.5" />
+          <rect x="28" y="93" width="44" height="5" fill={cfg.accent} opacity="0.5" />
+        </>
+      )}
 
       {/* Hoodie pocket */}
       {isHoodie && (
         <rect x="39" y="84" width="22" height="14" rx="4" fill={cfg.accent} stroke="#000" strokeWidth="1.5" />
+      )}
+
+      {/* Denim collar + buttons + pocket */}
+      {isDenim && (
+        <>
+          <path d="M44 66 L50 73 L56 66" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="50" cy="76" r="2" fill="#fff" opacity="0.8" />
+          <circle cx="50" cy="84" r="2" fill="#fff" opacity="0.8" />
+          <circle cx="50" cy="92" r="2" fill="#fff" opacity="0.8" />
+          <rect x="34" y="74" width="10" height="8" rx="2" fill={cfg.accent} stroke="#000" strokeWidth="1" />
+        </>
       )}
 
       {/* Armor plates */}
@@ -312,13 +387,67 @@ function Shirt({ shirtId, skinColor }: { shirtId: string; skinColor: string }) {
         <text x="50" y="88" textAnchor="middle" fontSize="12" fill="#FFD700">忍</text>
       )}
 
+      {/* Varsity letter */}
+      {isVarsity && (
+        <>
+          <rect x="28" y="90" width="44" height="5" fill="#fff" opacity="0.2" />
+          <text x="50" y="90" textAnchor="middle" fontSize="16" fontWeight="bold" fill={cfg.accent} stroke="#000" strokeWidth="0.5">K</text>
+        </>
+      )}
+
+      {/* Knight tunic cross */}
+      {isKnight && (
+        <>
+          <rect x="47" y="70" width="6" height="28" rx="2" fill={cfg.accent} opacity="0.8" />
+          <rect x="34" y="80" width="32" height="6" rx="2" fill={cfg.accent} opacity="0.8" />
+          <circle cx="50" cy="83" r="4" fill={cfg.accent} stroke="#000" strokeWidth="1" />
+        </>
+      )}
+
+      {/* Wizard stars */}
+      {isWizard && (
+        <>
+          <text x="38" y="82" textAnchor="middle" fontSize="10" fill={cfg.accent}>★</text>
+          <text x="62" y="88" textAnchor="middle" fontSize="8"  fill={cfg.accent}>✦</text>
+          <text x="45" y="96" textAnchor="middle" fontSize="7"  fill={cfg.accent}>✦</text>
+        </>
+      )}
+
+      {/* Dragon scales */}
+      {isDragon && (
+        <>
+          <ellipse cx="38" cy="75" rx="6" ry="4" fill={cfg.accent} opacity="0.6" />
+          <ellipse cx="50" cy="73" rx="6" ry="4" fill={cfg.accent} opacity="0.6" />
+          <ellipse cx="62" cy="75" rx="6" ry="4" fill={cfg.accent} opacity="0.6" />
+          <ellipse cx="44" cy="84" rx="6" ry="4" fill={cfg.accent} opacity="0.6" />
+          <ellipse cx="56" cy="84" rx="6" ry="4" fill={cfg.accent} opacity="0.6" />
+          <ellipse cx="38" cy="93" rx="6" ry="4" fill={cfg.accent} opacity="0.6" />
+          <ellipse cx="50" cy="93" rx="6" ry="4" fill={cfg.accent} opacity="0.6" />
+          <ellipse cx="62" cy="93" rx="6" ry="4" fill={cfg.accent} opacity="0.6" />
+        </>
+      )}
+
       {/* Left arm */}
-      <rect x="10" y="66" width="18" height="30" rx="5" fill={cfg.main} stroke="#000" strokeWidth="2" />
+      <rect x="10" y="66" width="18" height="30" rx="5" fill={armColor} stroke="#000" strokeWidth="2" />
+      {isStriped && (
+        <>
+          <rect x="10" y="73" width="18" height="5" fill={cfg.accent} opacity="0.5" />
+          <rect x="10" y="83" width="18" height="5" fill={cfg.accent} opacity="0.5" />
+        </>
+      )}
+      {isVarsity && <rect x="10" y="88" width="18" height="5" fill="#fff" opacity="0.3" />}
       {/* Left hand */}
       <circle cx="19" cy="98" r="6" fill={skinColor} stroke="#000" strokeWidth="1.5" />
 
       {/* Right arm */}
-      <rect x="72" y="66" width="18" height="30" rx="5" fill={cfg.main} stroke="#000" strokeWidth="2" />
+      <rect x="72" y="66" width="18" height="30" rx="5" fill={armColor} stroke="#000" strokeWidth="2" />
+      {isStriped && (
+        <>
+          <rect x="72" y="73" width="18" height="5" fill={cfg.accent} opacity="0.5" />
+          <rect x="72" y="83" width="18" height="5" fill={cfg.accent} opacity="0.5" />
+        </>
+      )}
+      {isVarsity && <rect x="72" y="88" width="18" height="5" fill="#fff" opacity="0.3" />}
       {/* Right hand */}
       <circle cx="81" cy="98" r="6" fill={skinColor} stroke="#000" strokeWidth="1.5" />
     </g>
@@ -327,18 +456,24 @@ function Shirt({ shirtId, skinColor }: { shirtId: string; skinColor: string }) {
 
 // ─── Pants ──────────────────────────────────────────────────────────────────
 const PANTS_CONFIGS: Record<string, { main: string; accent?: string }> = {
-  'jeans': { main: '#1e40af', accent: '#1d4ed8' },
-  'shorts-red': { main: '#DC2626' },
-  'pants-black': { main: '#1f2937' },
-  'shorts-camo': { main: '#4B5320', accent: '#6B7280' },
-  'skirt-plaid': { main: '#7C3AED', accent: '#6D28D9' },
-  'ninja-pants': { main: '#1a1a1a', accent: '#000' },
+  'jeans':           { main: '#1e40af', accent: '#1d4ed8' },
+  'shorts-red':      { main: '#DC2626' },
+  'pants-black':     { main: '#1f2937' },
+  'cargo-khaki':     { main: '#A0855B', accent: '#8B7355' },
+  'shorts-camo':     { main: '#4B5320', accent: '#6B7280' },
+  'track-pants':     { main: '#1E3A8A', accent: '#93C5FD' },
+  'skirt-plaid':     { main: '#7C3AED', accent: '#6D28D9' },
+  'ninja-pants':     { main: '#1a1a1a', accent: '#000' },
+  'knight-leggings': { main: '#64748B', accent: '#94A3B8' },
 };
 
 function Pants({ pantsId }: { pantsId: string }) {
   const cfg = PANTS_CONFIGS[pantsId] ?? { main: '#1e40af' };
-  const isShorts = pantsId.startsWith('shorts');
-  const isSkirt = pantsId === 'skirt-plaid';
+  const isShorts  = pantsId.startsWith('shorts');
+  const isSkirt   = pantsId === 'skirt-plaid';
+  const isCargo   = pantsId === 'cargo-khaki';
+  const isTrack   = pantsId === 'track-pants';
+  const isKnight  = pantsId === 'knight-leggings';
   const height = isShorts ? 16 : 28;
 
   return (
@@ -359,25 +494,56 @@ function Pants({ pantsId }: { pantsId: string }) {
           <circle cx="64" cy="115" r="2" fill="#3a4a20" opacity="0.6" />
         </>
       )}
+      {/* Cargo pockets */}
+      {isCargo && (
+        <>
+          <rect x="30" y="110" width="12" height="10" rx="2" fill={cfg.accent} stroke="#000" strokeWidth="1" />
+          <rect x="58" y="110" width="12" height="10" rx="2" fill={cfg.accent} stroke="#000" strokeWidth="1" />
+        </>
+      )}
+      {/* Track pants side stripe */}
+      {isTrack && (
+        <>
+          <rect x="28" y="104" width="6" height="28" rx="2" fill={cfg.accent} opacity="0.7" />
+          <rect x="66" y="104" width="6" height="28" rx="2" fill={cfg.accent} opacity="0.7" />
+        </>
+      )}
+      {/* Knight chainmail dots */}
+      {isKnight && (
+        <>
+          {[108, 116, 124].map(y => (
+            [34, 42, 50, 58, 66].map(x => (
+              <circle key={`${x}-${y}`} cx={x} cy={y} r="2" fill={cfg.accent} opacity="0.5" />
+            ))
+          ))}
+        </>
+      )}
     </g>
   );
 }
 
 // ─── Shoes ──────────────────────────────────────────────────────────────────
 const SHOE_CONFIGS: Record<string, { main: string; accent?: string }> = {
-  'sneakers': { main: '#e5e7eb', accent: '#007AFF' },
-  'boots-brown': { main: '#8B4513', accent: '#6B3410' },
-  'shoes-red': { main: '#DC2626', accent: '#991B1B' },
-  'ninja-boots': { main: '#1a1a1a', accent: '#333' },
+  'sneakers':     { main: '#e5e7eb', accent: '#007AFF' },
+  'sandals':      { main: '#D2B48C', accent: '#A0855B' },
+  'boots-brown':  { main: '#8B4513', accent: '#6B3410' },
+  'shoes-red':    { main: '#DC2626', accent: '#991B1B' },
+  'high-tops':    { main: '#1F2937', accent: '#EF4444' },
+  'ninja-boots':  { main: '#1a1a1a', accent: '#333' },
+  'knight-boots': { main: '#4B5563', accent: '#374151' },
+  'dragon-boots': { main: '#7F1D1D', accent: '#B45309' },
 };
 
 function Shoes({ shoeId, pantsId }: { shoeId: string; pantsId: string }) {
   const cfg = SHOE_CONFIGS[shoeId] ?? { main: '#e5e7eb' };
-  const isShorts = pantsId.startsWith('shorts');
-  const isSkirt = pantsId === 'skirt-plaid';
-  const legTop = isShorts ? 120 : (isSkirt ? 132 : 132);
+  const isShorts  = pantsId.startsWith('shorts');
+  const isSkirt   = pantsId === 'skirt-plaid';
+  const isHiTop   = shoeId === 'high-tops';
+  const isKnight  = shoeId === 'knight-boots';
+  const isDragon  = shoeId === 'dragon-boots';
+  const isSandal  = shoeId === 'sandals';
+  const legTop = isShorts ? 120 : 132;
 
-  // Legs
   return (
     <g>
       {!isSkirt && (
@@ -386,12 +552,57 @@ function Shoes({ shoeId, pantsId }: { shoeId: string; pantsId: string }) {
           <rect x="54" y={legTop} width="16" height="14" rx="3" fill={PANTS_CONFIGS[pantsId]?.main ?? '#1e40af'} stroke="#000" strokeWidth="2" />
         </>
       )}
+      {/* High-top shaft */}
+      {isHiTop && (
+        <>
+          <rect x="28" y="134" width="20" height="12" rx="3" fill={cfg.main} stroke="#000" strokeWidth="1.5" />
+          <rect x="52" y="134" width="20" height="12" rx="3" fill={cfg.main} stroke="#000" strokeWidth="1.5" />
+          <line x1="35" y1="136" x2="35" y2="143" stroke={cfg.accent} strokeWidth="1.5" />
+          <line x1="39" y1="136" x2="39" y2="143" stroke={cfg.accent} strokeWidth="1.5" />
+          <line x1="59" y1="136" x2="59" y2="143" stroke={cfg.accent} strokeWidth="1.5" />
+          <line x1="63" y1="136" x2="63" y2="143" stroke={cfg.accent} strokeWidth="1.5" />
+        </>
+      )}
+      {/* Knight boot greaves */}
+      {isKnight && (
+        <>
+          <rect x="28" y="132" width="20" height="14" rx="2" fill={cfg.main} stroke="#000" strokeWidth="1.5" />
+          <rect x="52" y="132" width="20" height="14" rx="2" fill={cfg.main} stroke="#000" strokeWidth="1.5" />
+          <rect x="30" y="134" width="16" height="4" rx="1" fill={cfg.accent} opacity="0.6" />
+          <rect x="54" y="134" width="16" height="4" rx="1" fill={cfg.accent} opacity="0.6" />
+        </>
+      )}
       {/* Left shoe */}
       <rect x="26" y="142" width="24" height="10" rx="5" fill={cfg.main} stroke="#000" strokeWidth="2" />
-      {cfg.accent && <rect x="26" y="142" width="24" height="4" rx="2" fill={cfg.accent} opacity="0.6" />}
       {/* Right shoe */}
       <rect x="50" y="142" width="24" height="10" rx="5" fill={cfg.main} stroke="#000" strokeWidth="2" />
-      {cfg.accent && <rect x="50" y="142" width="24" height="4" rx="2" fill={cfg.accent} opacity="0.6" />}
+      {/* Accent stripe */}
+      {cfg.accent && !isSandal && (
+        <>
+          <rect x="26" y="142" width="24" height="4" rx="2" fill={cfg.accent} opacity="0.6" />
+          <rect x="50" y="142" width="24" height="4" rx="2" fill={cfg.accent} opacity="0.6" />
+        </>
+      )}
+      {/* Sandal straps */}
+      {isSandal && (
+        <>
+          <line x1="30" y1="142" x2="30" y2="152" stroke={cfg.accent} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="38" y1="142" x2="38" y2="152" stroke={cfg.accent} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="46" y1="142" x2="46" y2="152" stroke={cfg.accent} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="54" y1="142" x2="54" y2="152" stroke={cfg.accent} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="62" y1="142" x2="62" y2="152" stroke={cfg.accent} strokeWidth="2.5" strokeLinecap="round" />
+          <line x1="70" y1="142" x2="70" y2="152" stroke={cfg.accent} strokeWidth="2.5" strokeLinecap="round" />
+        </>
+      )}
+      {/* Dragon boot spikes */}
+      {isDragon && (
+        <>
+          <polygon points="30,142 32,135 34,142" fill={cfg.accent} stroke="#000" strokeWidth="1" />
+          <polygon points="38,142 40,135 42,142" fill={cfg.accent} stroke="#000" strokeWidth="1" />
+          <polygon points="54,142 56,135 58,142" fill={cfg.accent} stroke="#000" strokeWidth="1" />
+          <polygon points="62,142 64,135 66,142" fill={cfg.accent} stroke="#000" strokeWidth="1" />
+        </>
+      )}
     </g>
   );
 }
@@ -440,6 +651,94 @@ function Accessory({ id, hairColor }: { id: string; hairColor: string }) {
         <g>
           <polygon points="32,24 28,6 40,20" fill="#FF3B30" stroke="#000" strokeWidth="1.5" />
           <polygon points="68,24 72,6 60,20" fill="#FF3B30" stroke="#000" strokeWidth="1.5" />
+        </g>
+      );
+    case 'scarf':
+      return (
+        <g>
+          <rect x="33" y="57" width="34" height="13" rx="6" fill="#FF3B30" stroke="#000" strokeWidth="1.5" />
+          <rect x="35" y="58" width="30" height="6" rx="4" fill="#FF6B6B" opacity="0.5" />
+          {/* Dangling end */}
+          <rect x="54" y="68" width="8" height="18" rx="4" fill="#FF3B30" stroke="#000" strokeWidth="1.5" />
+          <rect x="56" y="68" width="4" height="9" rx="2" fill="#FF6B6B" opacity="0.5" />
+        </g>
+      );
+    case 'knight-helmet':
+      return (
+        <g>
+          {/* Helmet dome */}
+          <path d="M 26 36 C 26 16, 36 10, 50 10 C 64 10, 74 16, 74 36 C 68 28, 60 24, 50 24 C 40 24, 32 28, 26 36 Z" fill="#9CA3AF" stroke="#000" strokeWidth="2" />
+          {/* Visor bar */}
+          <rect x="30" y="31" width="40" height="13" rx="3" fill="#374151" stroke="#000" strokeWidth="2" />
+          {/* Eye slits */}
+          <rect x="32" y="34" width="15" height="3" rx="1" fill="#9CA3AF" opacity="0.7" />
+          <rect x="53" y="34" width="15" height="3" rx="1" fill="#9CA3AF" opacity="0.7" />
+          <rect x="32" y="39" width="36" height="2" rx="1" fill="#9CA3AF" opacity="0.4" />
+          {/* Cheek guards */}
+          <rect x="24" y="38" width="8" height="18" rx="4" fill="#9CA3AF" stroke="#000" strokeWidth="1.5" />
+          <rect x="68" y="38" width="8" height="18" rx="4" fill="#9CA3AF" stroke="#000" strokeWidth="1.5" />
+        </g>
+      );
+    case 'wizard-hat':
+      return (
+        <g>
+          {/* Brim */}
+          <ellipse cx="50" cy="20" rx="28" ry="6" fill="#4C1D95" stroke="#000" strokeWidth="2" />
+          {/* Cone */}
+          <path d="M 30 20 L 50 -8 L 70 20 Z" fill="#4C1D95" stroke="#000" strokeWidth="2" />
+          {/* Band */}
+          <ellipse cx="50" cy="20" rx="20" ry="4" fill="#7C3AED" stroke="#000" strokeWidth="1" />
+          {/* Stars */}
+          <text x="50" y="12" textAnchor="middle" fontSize="8" fill="#FFD700">★</text>
+          <text x="40" y="18" textAnchor="middle" fontSize="6" fill="#C4B5FD">✦</text>
+          <text x="60" y="18" textAnchor="middle" fontSize="6" fill="#C4B5FD">✦</text>
+        </g>
+      );
+    case 'robot-visor':
+      return (
+        <g>
+          {/* Visor band */}
+          <rect x="26" y="31" width="48" height="13" rx="5" fill="#111827" stroke="#000" strokeWidth="2" />
+          {/* Left lens */}
+          <ellipse cx="39" cy="37" rx="8" ry="5" fill="#00D4FF" opacity="0.9" />
+          <ellipse cx="39" cy="37" rx="5" ry="3" fill="#fff" opacity="0.4" />
+          {/* Right lens */}
+          <ellipse cx="61" cy="37" rx="8" ry="5" fill="#00D4FF" opacity="0.9" />
+          <ellipse cx="61" cy="37" rx="5" ry="3" fill="#fff" opacity="0.4" />
+          {/* Bridge */}
+          <rect x="47" y="35" width="6" height="4" rx="1" fill="#1F2937" />
+        </g>
+      );
+    case 'angel-wings':
+      return (
+        <g>
+          {/* Left wing */}
+          <path d="M 28 78 C 12 68, -2 56, 4 42 C 8 34, 18 40, 28 68 Z" fill="white" stroke="#ddd" strokeWidth="1.5" />
+          <path d="M 28 74 C 14 64, 4 50, 8 38 C 12 30, 22 36, 28 62 Z" fill="white" opacity="0.6" />
+          <path d="M 28 70 C 16 60, 8 46, 12 36" fill="none" stroke="#e0e0e0" strokeWidth="1" />
+          {/* Right wing */}
+          <path d="M 72 78 C 88 68, 102 56, 96 42 C 92 34, 82 40, 72 68 Z" fill="white" stroke="#ddd" strokeWidth="1.5" />
+          <path d="M 72 74 C 86 64, 96 50, 92 38 C 88 30, 78 36, 72 62 Z" fill="white" opacity="0.6" />
+          <path d="M 72 70 C 84 60, 92 46, 88 36" fill="none" stroke="#e0e0e0" strokeWidth="1" />
+        </g>
+      );
+    case 'dragon-wings':
+      return (
+        <g>
+          {/* Left wing */}
+          <path d="M 28 80 C 10 68, -8 52, -2 34 C 2 22, 16 32, 28 70 Z" fill="#7F1D1D" stroke="#000" strokeWidth="2" />
+          <path d="M 28 72 C 6 58, -4 42, 0 28 C 4 18, 16 26, 28 60 Z" fill="#EF4444" opacity="0.5" />
+          {/* Wing spines */}
+          <line x1="28" y1="72" x2="2" y2="34" stroke="#000" strokeWidth="1.5" />
+          <line x1="28" y1="68" x2="6" y2="44" stroke="#000" strokeWidth="1" />
+          <line x1="28" y1="62" x2="10" y2="40" stroke="#000" strokeWidth="1" />
+          {/* Right wing */}
+          <path d="M 72 80 C 90 68, 108 52, 102 34 C 98 22, 84 32, 72 70 Z" fill="#7F1D1D" stroke="#000" strokeWidth="2" />
+          <path d="M 72 72 C 94 58, 104 42, 100 28 C 96 18, 84 26, 72 60 Z" fill="#EF4444" opacity="0.5" />
+          {/* Wing spines */}
+          <line x1="72" y1="72" x2="98" y2="34" stroke="#000" strokeWidth="1.5" />
+          <line x1="72" y1="68" x2="94" y2="44" stroke="#000" strokeWidth="1" />
+          <line x1="72" y1="62" x2="90" y2="40" stroke="#000" strokeWidth="1" />
         </g>
       );
     default:

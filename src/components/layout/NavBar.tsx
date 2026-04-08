@@ -5,7 +5,7 @@ import { WINS_PER_RANK } from '../../constants/ranks';
 import { AvatarSVG } from '../avatar/AvatarSVG';
 
 export const NavBar = () => {
-  const { profile, avatarConfig } = useGame();
+  const { profile, avatarConfig, isPro } = useGame();
   const location = useLocation();
   const rankColor = getRankColor(profile.rank);
 
@@ -15,6 +15,7 @@ export const NavBar = () => {
     { to: '/game', label: '⚔️ Battle!' },
     { to: '/avatar', label: '🎨 Avatar' },
     { to: '/profile', label: '👤 Profile' },
+    { to: '/pro', label: isPro ? '⚔️ PRO ✅' : '⚔️ Go Pro!' },
   ];
 
   return (
@@ -44,22 +45,26 @@ export const NavBar = () => {
       </Link>
 
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-        {navLinks.map(({ to, label }) => (
-          <Link key={to} to={to} style={{
-            textDecoration: 'none',
-            fontFamily: '"Fredoka One", cursive',
-            fontSize: '0.9rem',
-            padding: '5px 12px',
-            border: '3px solid',
-            borderRadius: '10px',
-            borderColor: location.pathname === to ? '#FFE234' : '#555',
-            background: location.pathname === to ? '#FFE234' : '#2a2a4a',
-            color: location.pathname === to ? '#000' : '#fff',
-            boxShadow: location.pathname === to ? '2px 2px 0px #000' : 'none',
-          }}>
-            {label}
-          </Link>
-        ))}
+        {navLinks.map(({ to, label }) => {
+          const isActive = location.pathname === to;
+          const isProLink = to === '/pro';
+          return (
+            <Link key={to} to={to} style={{
+              textDecoration: 'none',
+              fontFamily: '"Fredoka One", cursive',
+              fontSize: '0.9rem',
+              padding: '5px 12px',
+              border: '3px solid',
+              borderRadius: '10px',
+              borderColor: isActive ? '#FFE234' : isProLink ? (isPro ? '#34C759' : '#a78bfa') : '#555',
+              background: isActive ? '#FFE234' : isProLink ? (isPro ? '#052e16' : '#2e1065') : '#2a2a4a',
+              color: isActive ? '#000' : isProLink ? (isPro ? '#34C759' : '#c4b5fd') : '#fff',
+              boxShadow: isActive ? '2px 2px 0px #000' : 'none',
+            }}>
+              {label}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Right: avatar mini + tokens + rank */}
