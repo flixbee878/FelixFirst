@@ -153,115 +153,115 @@ function Mouth(_: { skinColor: string }) {
 }
 
 // ─── Hair front layer ──────────────────────────────────────────────────────
+// All caps use: outer arc (top of head, y≈8-10) + inner hairline arc (y≈28-32)
+// to form a solid filled shape instead of a thin crescent.
 function HairFront({ style, color }: { style: string; color: string }) {
-  const stroke = { stroke: '#000', strokeWidth: '1.8' };
+  const s = { stroke: '#000' as const, strokeWidth: '1.8' };
+  // Reusable solid cap: outer arc over head, inner arc along hairline
+  const CAP = `M 28 30 C 24 18, 36 8, 50 8 C 64 8, 76 18, 72 30 C 66 28, 58 26, 50 26 C 42 26, 34 28, 28 30 Z`;
+
   switch (style) {
     case 'short':
       return (
         <g>
-          <path d="M28 28 Q50 10 72 28 Q68 22 50 18 Q32 22 28 28Z" fill={color} {...stroke} />
-          <path d="M28 28 Q26 36 28 42 Q30 34 28 28Z" fill={color} {...stroke} />
-          <path d="M72 28 Q74 36 72 42 Q70 34 72 28Z" fill={color} {...stroke} />
+          <path d={CAP} fill={color} {...s} />
         </g>
       );
     case 'medium-straight':
       return (
         <g>
-          <path d="M28 28 Q50 10 72 28 Q68 22 50 18 Q32 22 28 28Z" fill={color} {...stroke} />
-          <path d="M28 28 Q24 38 26 52 Q28 40 28 28Z" fill={color} {...stroke} />
-          <path d="M72 28 Q76 38 74 52 Q72 40 72 28Z" fill={color} {...stroke} />
-          {/* Side bangs */}
-          <path d="M30 24 Q28 32 32 28 Q34 22 30 24Z" fill={color} stroke="#000" strokeWidth="1.2" />
+          <path d={CAP} fill={color} {...s} />
+          {/* Side panels hanging down */}
+          <path d="M 26 28 C 22 36, 22 48, 24 54 C 28 50, 30 38, 30 28 Z" fill={color} stroke="#000" strokeWidth="1.5" />
+          <path d="M 74 28 C 78 36, 78 48, 76 54 C 72 50, 70 38, 70 28 Z" fill={color} stroke="#000" strokeWidth="1.5" />
         </g>
       );
     case 'spiky':
       return (
         <g>
-          {/* Base */}
-          <path d="M28 32 Q50 14 72 32 Q68 24 50 20 Q32 24 28 32Z" fill={color} {...stroke} />
+          {/* Base cap */}
+          <path d="M 28 32 C 24 20, 36 10, 50 10 C 64 10, 76 20, 72 32 C 66 28, 58 26, 50 26 C 42 26, 34 28, 28 32 Z" fill={color} {...s} />
           {/* Spikes */}
-          <polygon points="38,22 42,6 46,22" fill={color} stroke="#000" strokeWidth="1.5" />
-          <polygon points="46,20 50,4 54,20" fill={color} stroke="#000" strokeWidth="1.5" />
-          <polygon points="54,22 58,6 62,22" fill={color} stroke="#000" strokeWidth="1.5" />
-          <path d="M28 32 Q26 38 28 44 Q30 38 28 32Z" fill={color} {...stroke} />
-          <path d="M72 32 Q74 38 72 44 Q70 38 72 32Z" fill={color} {...stroke} />
+          <polygon points="36,24 40,4 46,24" fill={color} stroke="#000" strokeWidth="1.5" />
+          <polygon points="46,22 50,2 54,22" fill={color} stroke="#000" strokeWidth="1.5" />
+          <polygon points="54,24 60,4 64,24" fill={color} stroke="#000" strokeWidth="1.5" />
         </g>
       );
     case 'long':
       return (
         <g>
-          <path d="M28 28 Q50 10 72 28 Q68 22 50 18 Q32 22 28 28Z" fill={color} {...stroke} />
-          {/* Front strands */}
-          <path d="M30 26 Q28 34 30 30 Q34 22 30 26Z" fill={color} stroke="#000" strokeWidth="1.2" />
-          <path d="M70 26 Q72 34 70 30 Q66 22 70 26Z" fill={color} stroke="#000" strokeWidth="1.2" />
+          <path d={CAP} fill={color} {...s} />
+          {/* Front strand hints at shoulders */}
+          <path d="M 26 28 C 22 38, 22 50, 24 56 C 28 52, 30 40, 30 28 Z" fill={color} stroke="#000" strokeWidth="1.5" />
+          <path d="M 74 28 C 78 38, 78 50, 76 56 C 72 52, 70 40, 70 28 Z" fill={color} stroke="#000" strokeWidth="1.5" />
         </g>
       );
     case 'ponytail':
       return (
         <g>
-          <path d="M28 28 Q50 10 72 28 Q68 22 50 18 Q32 22 28 28Z" fill={color} {...stroke} />
-          {/* Tie */}
-          <circle cx="68" cy="28" r="4" fill={color} stroke="#000" strokeWidth="1.5" />
+          <path d={CAP} fill={color} {...s} />
+          {/* Hair tie */}
+          <circle cx="68" cy="28" r="5" fill={color} stroke="#000" strokeWidth="1.5" />
         </g>
       );
     case 'anime-wild':
       return (
         <g>
-          {/* Massive spiky anime hair */}
-          <path d="M24 36 Q50 8 76 36 Q70 20 50 15 Q30 20 24 36Z" fill={color} {...stroke} />
-          <polygon points="32,24 36,4 42,22" fill={color} stroke="#000" strokeWidth="1.5" />
-          <polygon points="42,18 47,1 52,18" fill={color} stroke="#000" strokeWidth="1.5" />
-          <polygon points="52,18 57,1 63,18" fill={color} stroke="#000" strokeWidth="1.5" />
-          <polygon points="60,22 66,4 70,24" fill={color} stroke="#000" strokeWidth="1.5" />
-          <polygon points="22,30 18,14 28,28" fill={color} stroke="#000" strokeWidth="1.5" />
-          <polygon points="78,30 82,14 72,28" fill={color} stroke="#000" strokeWidth="1.5" />
-          {/* Side pieces */}
-          <path d="M24 36 Q20 44 22 52 Q24 44 24 36Z" fill={color} {...stroke} />
-          <path d="M76 36 Q80 44 78 52 Q76 44 76 36Z" fill={color} {...stroke} />
-          {/* Bangs */}
-          <path d="M36 22 Q38 30 42 26 Q40 20 36 22Z" fill={color} stroke="#000" strokeWidth="1.2" />
+          {/* Large base cap */}
+          <path d="M 24 34 C 18 18, 32 6, 50 6 C 68 6, 82 18, 76 34 C 68 28, 60 24, 50 24 C 40 24, 32 28, 24 34 Z" fill={color} {...s} />
+          {/* Many spikes */}
+          <polygon points="32,22 36,2 42,20" fill={color} stroke="#000" strokeWidth="1.5" />
+          <polygon points="42,18 47,0 53,18" fill={color} stroke="#000" strokeWidth="1.5" />
+          <polygon points="53,18 57,0 63,18" fill={color} stroke="#000" strokeWidth="1.5" />
+          <polygon points="62,22 66,2 72,22" fill={color} stroke="#000" strokeWidth="1.5" />
+          <polygon points="20,30 14,12 28,26" fill={color} stroke="#000" strokeWidth="1.5" />
+          <polygon points="80,30 86,12 72,26" fill={color} stroke="#000" strokeWidth="1.5" />
+          {/* Wide side pieces */}
+          <path d="M 24 34 C 18 44, 18 54, 20 58 C 26 54, 28 44, 26 34 Z" fill={color} stroke="#000" strokeWidth="1.5" />
+          <path d="M 76 34 C 82 44, 82 54, 80 58 C 74 54, 72 44, 74 34 Z" fill={color} stroke="#000" strokeWidth="1.5" />
         </g>
       );
     case 'curly':
       return (
         <g>
-          <path d="M28 30 Q50 10 72 30 Q68 22 50 18 Q32 22 28 30Z" fill={color} {...stroke} />
-          {/* Curls */}
-          <circle cx="32" cy="26" r="6" fill={color} stroke="#000" strokeWidth="1.5" />
-          <circle cx="42" cy="20" r="6" fill={color} stroke="#000" strokeWidth="1.5" />
-          <circle cx="52" cy="18" r="6" fill={color} stroke="#000" strokeWidth="1.5" />
-          <circle cx="62" cy="20" r="6" fill={color} stroke="#000" strokeWidth="1.5" />
-          <circle cx="70" cy="26" r="6" fill={color} stroke="#000" strokeWidth="1.5" />
-          <circle cx="27" cy="36" r="5" fill={color} stroke="#000" strokeWidth="1.5" />
-          <circle cx="73" cy="36" r="5" fill={color} stroke="#000" strokeWidth="1.5" />
+          {/* Base cap */}
+          <path d={CAP} fill={color} {...s} />
+          {/* Curl clusters along top hairline */}
+          <circle cx="32" cy="22" r="8" fill={color} stroke="#000" strokeWidth="1.5" />
+          <circle cx="42" cy="16" r="8" fill={color} stroke="#000" strokeWidth="1.5" />
+          <circle cx="52" cy="14" r="8" fill={color} stroke="#000" strokeWidth="1.5" />
+          <circle cx="62" cy="16" r="8" fill={color} stroke="#000" strokeWidth="1.5" />
+          <circle cx="70" cy="22" r="8" fill={color} stroke="#000" strokeWidth="1.5" />
+          {/* Side curls */}
+          <circle cx="24" cy="32" r="7" fill={color} stroke="#000" strokeWidth="1.5" />
+          <circle cx="76" cy="32" r="7" fill={color} stroke="#000" strokeWidth="1.5" />
         </g>
       );
     case 'bun':
       return (
         <g>
-          <path d="M30 32 Q50 18 70 32 Q66 24 50 22 Q34 24 30 32Z" fill={color} {...stroke} />
-          {/* Bun on top */}
-          <circle cx="50" cy="14" r="11" fill={color} stroke="#000" strokeWidth="2" />
+          {/* Base cap */}
+          <path d="M 30 32 C 26 22, 38 14, 50 14 C 62 14, 74 22, 70 32 C 64 28, 58 26, 50 26 C 42 26, 36 28, 30 32 Z" fill={color} {...s} />
+          {/* Bun */}
+          <circle cx="50" cy="12" r="13" fill={color} stroke="#000" strokeWidth="2" />
           {/* Hair band */}
-          <ellipse cx="50" cy="22" rx="10" ry="3" fill="#333" stroke="#000" strokeWidth="1.2" />
+          <ellipse cx="50" cy="22" rx="13" ry="4" fill="#333" stroke="#000" strokeWidth="1.2" />
         </g>
       );
     case 'mohawk':
       return (
         <g>
-          {/* Shaved sides */}
-          <path d="M28 28 Q34 22 38 28 Q36 24 28 28Z" fill={color} {...stroke} />
-          <path d="M72 28 Q66 22 62 28 Q64 24 72 28Z" fill={color} {...stroke} />
-          {/* Mohawk strip */}
-          <path d="M40 28 Q42 8 50 4 Q58 8 60 28 Q55 16 50 12 Q45 16 40 28Z" fill={color} {...stroke} />
+          {/* Shaved side patches */}
+          <path d="M 28 30 C 28 24, 32 22, 36 26 C 34 24, 30 24, 28 30 Z" fill={color} {...s} />
+          <path d="M 72 30 C 72 24, 68 22, 64 26 C 66 24, 70 24, 72 30 Z" fill={color} {...s} />
+          {/* Mohawk strip — solid filled band */}
+          <path d="M 42 28 C 42 18, 46 8, 50 4 C 54 8, 58 18, 58 28 C 55 18, 52 12, 50 10 C 48 12, 45 18, 42 28 Z" fill={color} {...s} />
         </g>
       );
     case 'twin-tails':
       return (
         <g>
-          <path d="M30 28 Q50 12 70 28 Q66 20 50 18 Q34 20 30 28Z" fill={color} {...stroke} />
-          {/* Bangs */}
-          <path d="M36 22 Q38 30 42 26 Q40 20 36 22Z" fill={color} stroke="#000" strokeWidth="1.2" />
+          <path d="M 30 30 C 26 18, 36 8, 50 8 C 64 8, 74 18, 70 30 C 64 28, 58 26, 50 26 C 42 26, 36 28, 30 30 Z" fill={color} {...s} />
         </g>
       );
     default:
