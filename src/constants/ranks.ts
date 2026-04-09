@@ -8,7 +8,7 @@ export const RANK_NAMES = [
   'Cyber Legend',
 ];
 
-export const WINS_PER_RANK = 4;
+export const WINS_PER_RANK = 10;
 
 export const RANK_COLORS = [
   '#95a5a6',
