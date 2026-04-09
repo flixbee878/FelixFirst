@@ -67,8 +67,23 @@ export const NavBar = () => {
         })}
       </div>
 
-      {/* Right: avatar mini + tokens + rank */}
+      {/* Right: username + tokens + rank + avatar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Username chip */}
+        <div style={{
+          background: isPro ? 'linear-gradient(135deg,#1a3a1a,#0a2a0a)' : '#2a2a4a',
+          border: `3px solid ${isPro ? '#34C759' : '#555'}`,
+          borderRadius: '10px',
+          padding: '3px 10px',
+          fontFamily: '"Fredoka One", cursive',
+          fontSize: '0.85rem',
+          color: isPro ? '#34C759' : '#ccc',
+          boxShadow: '2px 2px 0px #000',
+          whiteSpace: 'nowrap' as const,
+        }}>
+          {isPro ? '⚔️ ' : ''}{profile.username}
+        </div>
+
         {/* Token count */}
         <div style={{
           background: '#FFE234',

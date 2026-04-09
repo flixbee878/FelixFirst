@@ -1,14 +1,37 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { PlayerProfile } from '../types';
 import { WINS_PER_RANK } from '../constants/ranks';
-import { BATTLE_TOKEN_BASE, BATTLE_TOKEN_PER_RANK, PRO_MONTHLY_TOKENS } from '../constants/avatarParts';
+import {
+  BATTLE_TOKEN_BASE, BATTLE_TOKEN_PER_RANK,
+  PRO_MONTHLY_TOKENS, FLIXBEE_MONTHLY_TOKENS, FLIXBEE_USERNAME,
+} from '../constants/avatarParts';
 import type { AvatarConfig } from '../types/avatar';
 import { DEFAULT_AVATAR } from '../types/avatar';
 
-const STORAGE_KEY = 'type_knight_profile';
-const AVATAR_KEY = 'type_knight_avatar';
+const STORAGE_KEY  = 'type_knight_profile';
+const AVATAR_KEY   = 'type_knight_avatar';
+const USERNAMES_KEY = 'type_knight_usernames'; // list of all taken usernames on this device
 
+// ── Taken-username helpers ────────────────────────────────────────────────────
+const getTakenUsernames = (): string[] => {
+  try {
+    const s = localStorage.getItem(USERNAMES_KEY);
+    return s ? JSON.parse(s) : [];
+  } catch { return []; }
+};
+
+const reserveUsername = (username: string) => {
+  try {
+    const list = getTakenUsernames();
+    if (!list.map((u: string) => u.toLowerCase()).includes(username.toLowerCase())) {
+      localStorage.setItem(USERNAMES_KEY, JSON.stringify([...list, username]));
+    }
+  } catch { /* ignore */ }
+};
+
+// ── Default profile ───────────────────────────────────────────────────────────
 const defaultProfile: PlayerProfile = {
+  username: '',
   rank: 1,
   winsInCurrentRank: 0,
   totalWins: 0,
@@ -18,6 +41,7 @@ const defaultProfile: PlayerProfile = {
   isPro: false,
   proExpiresAt: null,
   proLastMonthlyGrant: null,
+  proMonthlyTokenAmount: PRO_MONTHLY_TOKENS,
 };
 
 const loadProfile = (): PlayerProfile => {
@@ -33,6 +57,7 @@ const loadProfile = (): PlayerProfile => {
         isPro: p.isPro ?? false,
         proExpiresAt: p.proExpiresAt ?? null,
         proLastMonthlyGrant: p.proLastMonthlyGrant ?? null,
+        proMonthlyTokenAmount: p.proMonthlyTokenAmount ?? PRO_MONTHLY_TOKENS,
       };
     }
   } catch { /* ignore */ }
@@ -55,11 +80,11 @@ const saveAvatar = (config: AvatarConfig) => {
   try { localStorage.setItem(AVATAR_KEY, JSON.stringify(config)); } catch { /* ignore */ }
 };
 
+// ── Hook ──────────────────────────────────────────────────────────────────────
 export const usePlayerProfile = () => {
   const [profile, setProfile] = useState<PlayerProfile>(loadProfile);
   const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(loadAvatar);
 
-  // Derived Pro status — pro is valid only if the expiry is in the future
   const isPro = useMemo(
     () => profile.isPro && profile.proExpiresAt !== null && profile.proExpiresAt > Date.now(),
     [profile.isPro, profile.proExpiresAt],
@@ -70,6 +95,36 @@ export const usePlayerProfile = () => {
     const last = profile.proLastMonthlyGrant ?? 0;
     return Date.now() - last >= 30 * 24 * 60 * 60 * 1000;
   }, [isPro, profile.proLastMonthlyGrant]);
+
+  // Returns 'ok' | 'taken' — sets username and grants Flixbee perks if applicable
+  const setUsername = useCallback((username: string): 'ok' | 'taken' => {
+    const taken = getTakenUsernames();
+    if (taken.map((u: string) => u.toLowerCase()).includes(username.toLowerCase())) {
+      return 'taken';
+    }
+
+    const isFlixbee = username.toLowerCase() === FLIXBEE_USERNAME.toLowerCase();
+    const now = Date.now();
+
+    setProfile((prev) => {
+      const updated: PlayerProfile = {
+        ...prev,
+        username,
+        // Flixbee: permanent Pro + boosted monthly tokens + first grant immediately
+        isPro: isFlixbee ? true : prev.isPro,
+        proExpiresAt: isFlixbee ? now + 3650 * 24 * 60 * 60 * 1000 : prev.proExpiresAt,
+        proMonthlyTokenAmount: isFlixbee ? FLIXBEE_MONTHLY_TOKENS : prev.proMonthlyTokenAmount,
+        // Give Flixbee their first monthly grant immediately
+        tokens: isFlixbee ? prev.tokens + FLIXBEE_MONTHLY_TOKENS : prev.tokens,
+        proLastMonthlyGrant: isFlixbee ? now : prev.proLastMonthlyGrant,
+      };
+      saveProfile(updated);
+      return updated;
+    });
+
+    reserveUsername(username);
+    return 'ok';
+  }, []);
 
   const recordWin = useCallback((tokensEarned?: number) => {
     setProfile((prev) => {
@@ -121,14 +176,12 @@ export const usePlayerProfile = () => {
     setAvatarConfig(DEFAULT_AVATAR);
   }, []);
 
-  // days=14 for trial, 30 for monthly, 365 for annual
   const activatePro = useCallback((days: number) => {
     setProfile((prev) => {
-      const now = Date.now();
       const updated: PlayerProfile = {
         ...prev,
         isPro: true,
-        proExpiresAt: now + days * 24 * 60 * 60 * 1000,
+        proExpiresAt: Date.now() + days * 24 * 60 * 60 * 1000,
       };
       saveProfile(updated);
       return updated;
@@ -140,9 +193,10 @@ export const usePlayerProfile = () => {
       const now = Date.now();
       const last = prev.proLastMonthlyGrant ?? 0;
       if (now - last < 30 * 24 * 60 * 60 * 1000) return prev;
+      const amount = prev.proMonthlyTokenAmount ?? PRO_MONTHLY_TOKENS;
       const updated = {
         ...prev,
-        tokens: prev.tokens + PRO_MONTHLY_TOKENS,
+        tokens: prev.tokens + amount,
         proLastMonthlyGrant: now,
       };
       saveProfile(updated);
@@ -153,6 +207,7 @@ export const usePlayerProfile = () => {
   return {
     profile, avatarConfig,
     isPro, canClaimMonthly,
+    setUsername,
     recordWin, recordLoss, unlockItem, updateAvatar, resetProfile,
     activatePro, claimMonthlyTokens,
   };

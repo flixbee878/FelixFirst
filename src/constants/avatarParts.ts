@@ -161,3 +161,5 @@ export const BATTLE_TOKEN_BASE = 15;
 export const BATTLE_TOKEN_PER_RANK = 5;
 export const PRO_BATTLE_BONUS = 5;
 export const PRO_MONTHLY_TOKENS = 500;
+export const FLIXBEE_MONTHLY_TOKENS = 750;
+export const FLIXBEE_USERNAME = 'Flixbee'; // exact case used for display

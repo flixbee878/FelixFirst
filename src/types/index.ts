@@ -38,6 +38,7 @@ export interface Lesson {
 }
 
 export interface PlayerProfile {
+  username: string;
   rank: number;
   winsInCurrentRank: number;
   totalWins: number;
@@ -45,8 +46,9 @@ export interface PlayerProfile {
   tokens: number;
   unlockedItems: string[];
   isPro: boolean;
-  proExpiresAt: number | null;        // Unix timestamp ms
-  proLastMonthlyGrant: number | null; // Unix timestamp ms
+  proExpiresAt: number | null;
+  proLastMonthlyGrant: number | null;
+  proMonthlyTokenAmount: number; // 500 for regular Pro, 750 for Flixbee
 }
 
 export interface TypingResult {

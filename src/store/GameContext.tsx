@@ -8,6 +8,7 @@ interface GameContextValue {
   avatarConfig: AvatarConfig;
   isPro: boolean;
   canClaimMonthly: boolean;
+  setUsername: (username: string) => 'ok' | 'taken';
   recordWin: (tokensEarned?: number) => void;
   recordLoss: () => void;
   unlockItem: (itemId: string, cost: number) => void;
@@ -21,7 +22,6 @@ const GameContext = createContext<GameContextValue | null>(null);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const hook = usePlayerProfile();
-
   return (
     <GameContext.Provider value={hook}>
       {children}
