@@ -8,6 +8,7 @@ import { GamePage } from './pages/GamePage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AvatarPage } from './pages/AvatarPage';
 import { ProPage } from './pages/ProPage';
+import { MiniGamesPage } from './pages/MiniGamesPage';
 
 // Inner component so it can read from GameContext
 function AppContent() {
@@ -28,6 +29,7 @@ function AppContent() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/avatar" element={<AvatarPage />} />
         <Route path="/pro" element={<ProPage />} />
+        <Route path="/minigames" element={<MiniGamesPage />} />
       </Routes>
     </>
   );

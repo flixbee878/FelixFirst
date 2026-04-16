@@ -13,6 +13,7 @@ export const NavBar = () => {
     { to: '/', label: '🏠 Home' },
     { to: '/lessons', label: '📚 Lessons' },
     { to: '/game', label: '⚔️ Battle!' },
+    { to: '/minigames', label: '🎮 Mini Games' },
     { to: '/avatar', label: '🎨 Avatar' },
     { to: '/profile', label: '👤 Profile' },
     { to: '/pro', label: isPro ? '⚔️ PRO ✅' : '⚔️ Go Pro!' },
