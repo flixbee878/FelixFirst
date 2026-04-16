@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useGame } from '../store/GameContext';
-import { PRO_MONTHLY_TOKENS, PRO_BATTLE_BONUS } from '../constants/avatarParts';
+import { PRO_MONTHLY_TOKENS, PRO_BATTLE_BONUS, VIP_USERNAMES } from '../constants/avatarParts';
 
 // ── Stripe Payment Links ──────────────────────────────────────────────────────
 // To wire up real payments:
@@ -26,6 +26,7 @@ const features = [
 
 export const ProPage = () => {
   const { profile, isPro, canClaimMonthly, activatePro, claimMonthlyTokens } = useGame();
+  const isVip = VIP_USERNAMES.some(v => v.toLowerCase() === profile.username.toLowerCase());
   const [searchParams, setSearchParams] = useSearchParams();
   const [justActivated, setJustActivated] = useState(false);
   const [claimed, setClaimed] = useState(false);
@@ -51,11 +52,7 @@ export const ProPage = () => {
 
   const handleSubscribe = (plan: 'monthly' | 'annual') => {
     const url = plan === 'monthly' ? STRIPE_MONTHLY_URL : STRIPE_ANNUAL_URL;
-    if (url === '#') {
-      // Payment link not set up yet — activate on honour system
-      activatePro(plan === 'monthly' ? 30 : 365);
-      setJustActivated(true);
-    } else {
+    if (url !== '#') {
       window.open(url, '_blank');
     }
   };
@@ -172,9 +169,10 @@ export const ProPage = () => {
                 <button
                   className="cartoon-btn"
                   onClick={() => handleSubscribe('monthly')}
-                  style={{ background: '#6366f1', color: '#fff', width: '100%' }}
+                  disabled={STRIPE_MONTHLY_URL === '#' && !isVip}
+                  style={{ background: STRIPE_MONTHLY_URL === '#' && !isVip ? '#2a2a4a' : '#6366f1', color: STRIPE_MONTHLY_URL === '#' && !isVip ? '#555' : '#fff', width: '100%', cursor: STRIPE_MONTHLY_URL === '#' && !isVip ? 'not-allowed' : 'pointer' }}
                 >
-                  Subscribe Monthly
+                  {STRIPE_MONTHLY_URL === '#' && !isVip ? '🔒 Coming Soon' : 'Subscribe Monthly'}
                 </button>
               </div>
 
@@ -200,25 +198,34 @@ export const ProPage = () => {
                 <button
                   className="cartoon-btn"
                   onClick={() => handleSubscribe('annual')}
-                  style={{ background: '#FFE234', color: '#000', width: '100%' }}
+                  disabled={STRIPE_ANNUAL_URL === '#' && !isVip}
+                  style={{ background: STRIPE_ANNUAL_URL === '#' && !isVip ? '#2a2a4a' : '#FFE234', color: STRIPE_ANNUAL_URL === '#' && !isVip ? '#555' : '#000', width: '100%', cursor: STRIPE_ANNUAL_URL === '#' && !isVip ? 'not-allowed' : 'pointer' }}
                 >
-                  Subscribe Annually
+                  {STRIPE_ANNUAL_URL === '#' && !isVip ? '🔒 Coming Soon' : 'Subscribe Annually'}
                 </button>
               </div>
             </div>
 
-            {/* Free trial */}
+            {/* Free trial — VIP only until payments are live */}
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-              <p style={{ fontFamily: '"Fredoka One", cursive', color: '#aaa', marginBottom: '12px' }}>
-                Not sure? Try Pro free for 2 weeks — no payment needed!
-              </p>
-              <button
-                className="cartoon-btn"
-                onClick={handleTrial}
-                style={{ background: '#34C759', color: '#fff', fontSize: '1.1rem', padding: '12px 32px' }}
-              >
-                🎁 Start 14-Day Free Trial
-              </button>
+              {isVip ? (
+                <>
+                  <p style={{ fontFamily: '"Fredoka One", cursive', color: '#aaa', marginBottom: '12px' }}>
+                    Not sure? Try Pro free for 2 weeks — no payment needed!
+                  </p>
+                  <button
+                    className="cartoon-btn"
+                    onClick={handleTrial}
+                    style={{ background: '#34C759', color: '#fff', fontSize: '1.1rem', padding: '12px 32px' }}
+                  >
+                    🎁 Start 14-Day Free Trial
+                  </button>
+                </>
+              ) : (
+                <p style={{ fontFamily: '"Fredoka One", cursive', color: '#555', fontSize: '0.9rem' }}>
+                  💳 Payments coming soon — stay tuned!
+                </p>
+              )}
             </div>
 
             {/* Token comparison */}
