@@ -3,7 +3,7 @@ import type { PlayerProfile } from '../types';
 import { WINS_PER_RANK } from '../constants/ranks';
 import {
   BATTLE_TOKEN_BASE, BATTLE_TOKEN_PER_RANK,
-  PRO_MONTHLY_TOKENS, FLIXBEE_MONTHLY_TOKENS, FLIXBEE_USERNAME,
+  PRO_MONTHLY_TOKENS, FLIXBEE_MONTHLY_TOKENS, FLIXBEE_USERNAME, VIP_USERNAMES,
 } from '../constants/avatarParts';
 import type { AvatarConfig } from '../types/avatar';
 import { DEFAULT_AVATAR } from '../types/avatar';
@@ -159,6 +159,7 @@ export const usePlayerProfile = () => {
     if (findAccount(username)) return 'taken';
 
     const isFlixbee = username.toLowerCase() === FLIXBEE_USERNAME.toLowerCase();
+    const isVip     = VIP_USERNAMES.some(v => v.toLowerCase() === username.toLowerCase());
     const now = Date.now();
     const hash = hashPassword(password);
 
@@ -168,11 +169,11 @@ export const usePlayerProfile = () => {
     const initial = DEFAULT_PROFILE(username);
     const withPerks: PlayerProfile = {
       ...initial,
-      isPro:                isFlixbee ? true  : false,
-      proExpiresAt:         isFlixbee ? now + 3650 * 24 * 60 * 60 * 1000 : null,
-      proMonthlyTokenAmount:isFlixbee ? FLIXBEE_MONTHLY_TOKENS : PRO_MONTHLY_TOKENS,
-      tokens:               isFlixbee ? FLIXBEE_MONTHLY_TOKENS : 0,
-      proLastMonthlyGrant:  isFlixbee ? now : null,
+      isPro:                isVip ? true  : false,
+      proExpiresAt:         isVip ? now + 3650 * 24 * 60 * 60 * 1000 : null,
+      proMonthlyTokenAmount:isFlixbee ? FLIXBEE_MONTHLY_TOKENS : isVip ? PRO_MONTHLY_TOKENS : PRO_MONTHLY_TOKENS,
+      tokens:               isFlixbee ? FLIXBEE_MONTHLY_TOKENS : isVip ? PRO_MONTHLY_TOKENS : 0,
+      proLastMonthlyGrant:  isVip ? now : null,
     };
     saveProfile(withPerks);
     setProfile(withPerks);
