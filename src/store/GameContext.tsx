@@ -8,7 +8,7 @@ interface GameContextValue {
   avatarConfig: AvatarConfig;
   isPro: boolean;
   canClaimMonthly: boolean;
-  setUsername: (username: string) => 'ok' | 'taken';
+  setUsername: (username: string, password: string) => 'ok' | 'taken';
   recordWin: (tokensEarned?: number) => void;
   recordLoss: () => void;
   unlockItem: (itemId: string, cost: number) => void;

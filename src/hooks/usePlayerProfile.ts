@@ -8,28 +8,45 @@ import {
 import type { AvatarConfig } from '../types/avatar';
 import { DEFAULT_AVATAR } from '../types/avatar';
 
-const STORAGE_KEY  = 'type_knight_profile';
-const AVATAR_KEY   = 'type_knight_avatar';
-const USERNAMES_KEY = 'type_knight_usernames'; // list of all taken usernames on this device
+const STORAGE_KEY   = 'type_knight_profile';
+const AVATAR_KEY    = 'type_knight_avatar';
+const ACCOUNTS_KEY  = 'type_knight_accounts'; // {username, hash}[]
 
-// ── Taken-username helpers ────────────────────────────────────────────────────
-const getTakenUsernames = (): string[] => {
+// ── Simple FNV-1a hash (not cryptographic, fine for a kids' game) ──────────
+const hashPassword = (password: string): string => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < password.length; i++) {
+    h ^= password.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16).padStart(8, '0');
+};
+
+// ── Account list helpers ──────────────────────────────────────────────────
+interface AccountEntry { username: string; hash: string; }
+
+const getAccounts = (): AccountEntry[] => {
   try {
-    const s = localStorage.getItem(USERNAMES_KEY);
-    return s ? JSON.parse(s) : [];
+    const s = localStorage.getItem(ACCOUNTS_KEY);
+    if (!s) return [];
+    const parsed = JSON.parse(s);
+    // Migration: if old format was string[] — discard it
+    if (!Array.isArray(parsed) || (parsed.length > 0 && typeof parsed[0] === 'string')) {
+      localStorage.removeItem(ACCOUNTS_KEY);
+      return [];
+    }
+    return parsed as AccountEntry[];
   } catch { return []; }
 };
 
-const reserveUsername = (username: string) => {
-  try {
-    const list = getTakenUsernames();
-    if (!list.map((u: string) => u.toLowerCase()).includes(username.toLowerCase())) {
-      localStorage.setItem(USERNAMES_KEY, JSON.stringify([...list, username]));
-    }
-  } catch { /* ignore */ }
+const saveAccounts = (accounts: AccountEntry[]) => {
+  try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts)); } catch { /* ignore */ }
 };
 
-// ── Default profile ───────────────────────────────────────────────────────────
+const findAccount = (username: string): AccountEntry | undefined =>
+  getAccounts().find(a => a.username.toLowerCase() === username.toLowerCase());
+
+// ── Default profile ───────────────────────────────────────────────────────
 const defaultProfile: PlayerProfile = {
   username: '',
   rank: 1,
@@ -49,6 +66,13 @@ const loadProfile = (): PlayerProfile => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const p = JSON.parse(stored);
+      if (p.username) {
+        // If this username has no password account yet → wipe it (old password-less account)
+        if (!findAccount(p.username)) {
+          localStorage.removeItem(STORAGE_KEY);
+          return defaultProfile;
+        }
+      }
       return {
         ...defaultProfile,
         ...p,
@@ -80,7 +104,7 @@ const saveAvatar = (config: AvatarConfig) => {
   try { localStorage.setItem(AVATAR_KEY, JSON.stringify(config)); } catch { /* ignore */ }
 };
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
+// ── Hook ──────────────────────────────────────────────────────────────────
 export const usePlayerProfile = () => {
   const [profile, setProfile] = useState<PlayerProfile>(loadProfile);
   const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(loadAvatar);
@@ -96,33 +120,31 @@ export const usePlayerProfile = () => {
     return Date.now() - last >= 30 * 24 * 60 * 60 * 1000;
   }, [isPro, profile.proLastMonthlyGrant]);
 
-  // Returns 'ok' | 'taken' — sets username and grants Flixbee perks if applicable
-  const setUsername = useCallback((username: string): 'ok' | 'taken' => {
-    const taken = getTakenUsernames();
-    if (taken.map((u: string) => u.toLowerCase()).includes(username.toLowerCase())) {
-      return 'taken';
-    }
+  // Returns 'ok' | 'taken'
+  const setUsername = useCallback((username: string, password: string): 'ok' | 'taken' => {
+    if (findAccount(username)) return 'taken';
 
     const isFlixbee = username.toLowerCase() === FLIXBEE_USERNAME.toLowerCase();
     const now = Date.now();
+    const hash = hashPassword(password);
+
+    // Register account
+    const accounts = getAccounts();
+    saveAccounts([...accounts, { username, hash }]);
 
     setProfile((prev) => {
       const updated: PlayerProfile = {
         ...prev,
         username,
-        // Flixbee: permanent Pro + boosted monthly tokens + first grant immediately
         isPro: isFlixbee ? true : prev.isPro,
         proExpiresAt: isFlixbee ? now + 3650 * 24 * 60 * 60 * 1000 : prev.proExpiresAt,
         proMonthlyTokenAmount: isFlixbee ? FLIXBEE_MONTHLY_TOKENS : prev.proMonthlyTokenAmount,
-        // Give Flixbee their first monthly grant immediately
         tokens: isFlixbee ? prev.tokens + FLIXBEE_MONTHLY_TOKENS : prev.tokens,
         proLastMonthlyGrant: isFlixbee ? now : prev.proLastMonthlyGrant,
       };
       saveProfile(updated);
       return updated;
     });
-
-    reserveUsername(username);
     return 'ok';
   }, []);
 

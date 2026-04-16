@@ -2,40 +2,71 @@ import { useState, type FormEvent } from 'react';
 import { useGame } from '../store/GameContext';
 import { FLIXBEE_USERNAME, FLIXBEE_MONTHLY_TOKENS } from '../constants/avatarParts';
 
+const isAlphanumeric = (s: string) => /^[a-zA-Z0-9]+$/.test(s);
+
+const passwordStrength = (pw: string): { label: string; color: string; bars: number } => {
+  if (pw.length === 0) return { label: '', color: '#555', bars: 0 };
+  if (pw.length < 6)   return { label: 'Too short', color: '#EF4444', bars: 1 };
+  if (pw.length < 9)   return { label: 'OK', color: '#FBBF24', bars: 2 };
+  if (pw.length < 12)  return { label: 'Good', color: '#34C759', bars: 3 };
+  return { label: 'Strong!', color: '#22d3ee', bars: 4 };
+};
+
 export const WelcomePage = () => {
   const { setUsername } = useGame();
-  const [input, setInput] = useState('');
+  const [name, setName]   = useState('');
+  const [pass, setPass]   = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const isFlixbee = input.toLowerCase() === FLIXBEE_USERNAME.toLowerCase();
+  const isFlixbee  = name.toLowerCase() === FLIXBEE_USERNAME.toLowerCase();
+  const strength   = passwordStrength(pass);
+
+  const validate = (): string => {
+    const n = name.trim();
+    if (n.length < 2)  return 'Username must be at least 2 characters!';
+    if (n.length > 20) return 'Username must be 20 characters or less!';
+    if (!/^[a-zA-Z0-9_-]+$/.test(n)) return 'Username: only letters, numbers, _ and - allowed!';
+
+    if (pass.length < 6) return 'Password must be at least 6 characters!';
+    if (!isAlphanumeric(pass)) return 'Password: only letters and numbers allowed!';
+    if (pass !== confirm) return 'Passwords do not match!';
+    return '';
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const trimmed = input.trim();
+    const err = validate();
+    if (err) { setError(err); return; }
 
-    if (trimmed.length < 2) {
-      setError('Username must be at least 2 characters!');
-      return;
-    }
-    if (trimmed.length > 20) {
-      setError('Username must be 20 characters or less!');
-      return;
-    }
-    if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
-      setError('Only letters, numbers, _ and - allowed!');
-      return;
-    }
-
-    setLoading(true);
-    const result = setUsername(trimmed);
-    setLoading(false);
-
+    const result = setUsername(name.trim(), pass);
     if (result === 'taken') {
-      setError(`"${trimmed}" is already taken — pick another name!`);
+      setError(`"${name.trim()}" is already taken — pick another name!`);
     }
-    // 'ok' → profile.username is now set → App renders the real app
+    // 'ok' → profile.username set → AppContent renders the real app
   };
+
+  // Input style helper
+  const inputStyle = (hasContent: boolean, invalid: boolean): React.CSSProperties => ({
+    width: '100%',
+    boxSizing: 'border-box',
+    padding: '13px 16px',
+    fontSize: '1.1rem',
+    fontFamily: '"Fredoka One", cursive',
+    border: `3px solid ${invalid ? '#EF4444' : hasContent ? '#FFE234' : '#444'}`,
+    borderRadius: '12px',
+    background: '#0d1117',
+    color: '#fff',
+    outline: 'none',
+    textAlign: 'center' as const,
+    letterSpacing: '1px',
+    transition: 'border-color 0.2s',
+  });
+
+  const passInvalid = pass.length > 0 && pass.length < 6;
+  const confirmInvalid = confirm.length > 0 && pass !== confirm;
+  const canSubmit = name.trim().length >= 2 && pass.length >= 6 && pass === confirm && isAlphanumeric(pass);
 
   return (
     <div style={{
@@ -48,17 +79,24 @@ export const WelcomePage = () => {
       padding: '24px 16px',
     }}>
       {/* Floating decorations */}
-      <div style={{ position: 'fixed', top: '10%', left: '5%', fontSize: '2rem', opacity: 0.15, animation: 'bounce_slow 3s ease-in-out infinite' }}>⚔️</div>
-      <div style={{ position: 'fixed', top: '20%', right: '8%', fontSize: '1.5rem', opacity: 0.12, animation: 'bounce_slow 4s ease-in-out infinite 1s' }}>🤖</div>
-      <div style={{ position: 'fixed', bottom: '15%', left: '10%', fontSize: '1.8rem', opacity: 0.12, animation: 'bounce_slow 3.5s ease-in-out infinite 0.5s' }}>⌨️</div>
-      <div style={{ position: 'fixed', bottom: '20%', right: '6%', fontSize: '1.5rem', opacity: 0.12, animation: 'bounce_slow 4.5s ease-in-out infinite 2s' }}>🏆</div>
+      {['⚔️', '🤖', '⌨️', '🏆'].map((icon, i) => (
+        <div key={i} style={{
+          position: 'fixed',
+          top: i < 2 ? `${10 + i * 12}%` : undefined,
+          bottom: i >= 2 ? `${15 + (i - 2) * 8}%` : undefined,
+          left:  i % 2 === 0 ? `${5 + i}%` : undefined,
+          right: i % 2 === 1 ? `${6 + i}%` : undefined,
+          fontSize: '1.8rem', opacity: 0.12,
+          animation: `bounce_slow ${3 + i * 0.5}s ease-in-out infinite ${i * 0.5}s`,
+        }}>{icon}</div>
+      ))}
 
       <div style={{
         background: '#16213E',
         border: '4px solid #FFE234',
         borderRadius: '24px',
-        padding: '36px 28px',
-        maxWidth: '440px',
+        padding: '32px 28px',
+        maxWidth: '420px',
         width: '100%',
         boxShadow: '8px 8px 0px #000',
         textAlign: 'center',
@@ -66,97 +104,131 @@ export const WelcomePage = () => {
         {/* Logo */}
         <h1 style={{
           fontFamily: '"Bangers", cursive',
-          fontSize: 'clamp(2.4rem, 8vw, 3.6rem)',
+          fontSize: 'clamp(2.2rem, 7vw, 3.4rem)',
           color: '#FFE234',
           textShadow: '4px 4px 0px #000, -2px -2px 0px #FF8C00',
           letterSpacing: '4px',
-          margin: '0 0 4px',
-          lineHeight: 1,
+          margin: '0 0 4px', lineHeight: 1,
         }}>
           ⚔️ TYPE KNIGHT ⚔️
         </h1>
-        <p style={{ fontFamily: '"Fredoka One", cursive', color: '#a0b0ff', fontSize: '1rem', margin: '0 0 28px' }}>
+        <p style={{ fontFamily: '"Fredoka One", cursive', color: '#a0b0ff', fontSize: '1rem', margin: '0 0 22px' }}>
           Battle Evil Robots With Your Keyboard!
         </p>
+        <div style={{ fontSize: '2rem', marginBottom: '20px', letterSpacing: '6px' }}>🤖⚔️🧑</div>
 
-        {/* Robots row */}
-        <div style={{ fontSize: '2.4rem', marginBottom: '24px', letterSpacing: '8px' }}>
-          🤖⚔️🧑
-        </div>
-
-        <h2 style={{
-          fontFamily: '"Bangers", cursive',
-          fontSize: '1.6rem',
-          color: '#fff',
-          letterSpacing: '2px',
-          margin: '0 0 6px',
-        }}>
-          CHOOSE YOUR KNIGHT NAME
+        <h2 style={{ fontFamily: '"Bangers", cursive', fontSize: '1.5rem', color: '#fff', letterSpacing: '2px', margin: '0 0 4px' }}>
+          CREATE YOUR ACCOUNT
         </h2>
-        <p style={{ fontFamily: '"Fredoka One", cursive', color: '#888', fontSize: '0.9rem', margin: '0 0 20px' }}>
-          No password needed — just pick a unique name!
+        <p style={{ fontFamily: '"Fredoka One", cursive', color: '#666', fontSize: '0.85rem', margin: '0 0 18px' }}>
+          Pick a unique knight name + password to save your progress!
         </p>
 
-        {/* Special Flixbee hint */}
-        {isFlixbee && input.length > 0 && (
+        {/* Flixbee VIP hint */}
+        {isFlixbee && name.length > 0 && (
           <div style={{
             background: 'linear-gradient(135deg, #0a3a0a, #1a6a1a)',
-            border: '3px solid #34C759',
-            borderRadius: '12px',
-            padding: '10px 14px',
-            marginBottom: '16px',
-            fontFamily: '"Fredoka One", cursive',
-            color: '#34C759',
-            fontSize: '0.95rem',
+            border: '3px solid #34C759', borderRadius: '12px',
+            padding: '10px 14px', marginBottom: '16px',
+            fontFamily: '"Fredoka One", cursive', color: '#34C759', fontSize: '0.9rem',
             animation: 'pop_in 0.3s ease-out',
           }}>
-            👑 Welcome, <strong>{FLIXBEE_USERNAME}</strong>! You get free Pro membership
-            + <strong>{FLIXBEE_MONTHLY_TOKENS} tokens</strong> right now!
+            👑 Welcome, <strong>{FLIXBEE_USERNAME}</strong>! You get free Pro + <strong>{FLIXBEE_MONTHLY_TOKENS} tokens</strong> right now!
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={input}
-            onChange={e => { setInput(e.target.value); setError(''); }}
-            placeholder="Enter your knight name..."
-            maxLength={20}
-            autoFocus
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              padding: '14px 16px',
-              fontSize: '1.2rem',
-              fontFamily: '"Fredoka One", cursive',
-              border: `3px solid ${error ? '#FF3B30' : input.length > 0 ? '#FFE234' : '#444'}`,
-              borderRadius: '12px',
-              background: '#0d1117',
-              color: '#fff',
-              outline: 'none',
-              marginBottom: '8px',
-              textAlign: 'center',
-              letterSpacing: '1px',
-              transition: 'border-color 0.2s',
-            }}
-          />
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
 
-          {/* Character count */}
-          <div style={{ fontFamily: '"Fredoka One", cursive', color: '#555', fontSize: '0.8rem', marginBottom: '12px' }}>
-            {input.length}/20
+          {/* Username */}
+          <div>
+            <div style={{ fontFamily: '"Fredoka One", cursive', color: '#aaa', fontSize: '0.82rem', marginBottom: '4px', textAlign: 'left' }}>
+              Knight Name
+            </div>
+            <input
+              type="text"
+              value={name}
+              onChange={e => { setName(e.target.value); setError(''); }}
+              placeholder="e.g. CoolKnight99"
+              maxLength={20}
+              autoFocus
+              style={inputStyle(name.length > 0, false)}
+            />
+            <div style={{ fontFamily: '"Fredoka One", cursive', color: '#444', fontSize: '0.75rem', textAlign: 'right', marginTop: '2px' }}>
+              {name.length}/20
+            </div>
+          </div>
+
+          {/* Password */}
+          <div>
+            <div style={{ fontFamily: '"Fredoka One", cursive', color: '#aaa', fontSize: '0.82rem', marginBottom: '4px', textAlign: 'left' }}>
+              Password <span style={{ color: '#555' }}>(6+ letters or numbers)</span>
+            </div>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPass ? 'text' : 'password'}
+                value={pass}
+                onChange={e => { setPass(e.target.value); setError(''); }}
+                placeholder="••••••"
+                maxLength={32}
+                style={inputStyle(pass.length > 0, passInvalid)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(s => !s)}
+                style={{
+                  position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem',
+                }}
+              >
+                {showPass ? '🙈' : '👁️'}
+              </button>
+            </div>
+
+            {/* Strength bars */}
+            {pass.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                <div style={{ display: 'flex', gap: '3px' }}>
+                  {[1, 2, 3, 4].map(n => (
+                    <div key={n} style={{
+                      width: '24px', height: '6px', borderRadius: '3px',
+                      background: n <= strength.bars ? strength.color : '#333',
+                      transition: 'background 0.2s',
+                    }} />
+                  ))}
+                </div>
+                <span style={{ fontFamily: '"Fredoka One", cursive', fontSize: '0.75rem', color: strength.color }}>
+                  {strength.label}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Confirm password */}
+          <div>
+            <div style={{ fontFamily: '"Fredoka One", cursive', color: '#aaa', fontSize: '0.82rem', marginBottom: '4px', textAlign: 'left' }}>
+              Confirm Password
+            </div>
+            <input
+              type={showPass ? 'text' : 'password'}
+              value={confirm}
+              onChange={e => { setConfirm(e.target.value); setError(''); }}
+              placeholder="••••••"
+              maxLength={32}
+              style={inputStyle(confirm.length > 0, confirmInvalid)}
+            />
+            {confirm.length > 0 && !confirmInvalid && (
+              <div style={{ fontFamily: '"Fredoka One", cursive', fontSize: '0.75rem', color: '#34C759', marginTop: '2px', textAlign: 'right' }}>
+                ✓ Passwords match
+              </div>
+            )}
           </div>
 
           {/* Error */}
           {error && (
             <div style={{
-              background: '#3a0a0a',
-              border: '2px solid #FF3B30',
-              borderRadius: '10px',
-              padding: '8px 12px',
-              marginBottom: '14px',
-              fontFamily: '"Fredoka One", cursive',
-              color: '#FF6B6B',
-              fontSize: '0.9rem',
+              background: '#3a0a0a', border: '2px solid #EF4444',
+              borderRadius: '10px', padding: '8px 12px',
+              fontFamily: '"Fredoka One", cursive', color: '#FF6B6B', fontSize: '0.88rem',
               animation: 'pop_in 0.2s ease-out',
             }}>
               ❌ {error}
@@ -165,24 +237,22 @@ export const WelcomePage = () => {
 
           <button
             type="submit"
-            disabled={loading || input.trim().length < 2}
+            disabled={!canSubmit}
             className="cartoon-btn"
             style={{
-              width: '100%',
-              fontSize: '1.3rem',
-              padding: '14px',
-              background: input.trim().length < 2 ? '#333' : isFlixbee ? '#34C759' : '#FFE234',
-              color: '#000',
-              cursor: input.trim().length < 2 ? 'not-allowed' : 'pointer',
-              opacity: input.trim().length < 2 ? 0.5 : 1,
+              width: '100%', fontSize: '1.2rem', padding: '13px', marginTop: '4px',
+              background: !canSubmit ? '#2a2a4a' : isFlixbee ? '#34C759' : '#FFE234',
+              color: !canSubmit ? '#555' : '#000',
+              cursor: canSubmit ? 'pointer' : 'not-allowed',
+              border: `3px solid ${canSubmit ? '#000' : '#444'}`,
             }}
           >
-            {loading ? '...' : isFlixbee ? '👑 ENTER, FLIXBEE!' : '⚔️ JOIN THE BATTLE!'}
+            {isFlixbee ? '👑 ENTER, FLIXBEE!' : '⚔️ JOIN THE BATTLE!'}
           </button>
         </form>
 
-        <p style={{ fontFamily: '"Fredoka One", cursive', color: '#444', fontSize: '0.78rem', marginTop: '20px', marginBottom: 0 }}>
-          Your progress is saved on this device.
+        <p style={{ fontFamily: '"Fredoka One", cursive', color: '#333', fontSize: '0.75rem', marginTop: '18px', marginBottom: 0 }}>
+          Your account and progress are saved on this device.
         </p>
       </div>
     </div>
