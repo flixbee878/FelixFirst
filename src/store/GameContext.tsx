@@ -9,6 +9,7 @@ interface GameContextValue {
   isPro: boolean;
   canClaimMonthly: boolean;
   setUsername: (username: string, password: string) => 'ok' | 'taken';
+  login: (username: string, password: string) => 'ok' | 'wrong_password' | 'not_found';
   recordWin: (tokensEarned?: number) => void;
   recordLoss: () => void;
   unlockItem: (itemId: string, cost: number) => void;

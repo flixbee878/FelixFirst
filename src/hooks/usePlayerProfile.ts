@@ -8,15 +8,17 @@ import {
 import type { AvatarConfig } from '../types/avatar';
 import { DEFAULT_AVATAR } from '../types/avatar';
 
-const STORAGE_KEY   = 'type_knight_profile';
-const AVATAR_KEY    = 'type_knight_avatar';
-const ACCOUNTS_KEY  = 'type_knight_accounts'; // {username, hash}[]
+// Per-user storage keys
+const SESSION_KEY   = 'type_knight_session';          // current username
+const ACCOUNTS_KEY  = 'type_knight_accounts';         // [{username, hash}]
+const profileKey    = (u: string) => `type_knight_profile_${u}`;
+const avatarKey     = (u: string) => `type_knight_avatar_${u}`;
 
-// ── Simple FNV-1a hash (not cryptographic, fine for a kids' game) ──────────
-const hashPassword = (password: string): string => {
+// ── FNV-1a hash ───────────────────────────────────────────────────────────
+const hashPassword = (pw: string): string => {
   let h = 0x811c9dc5;
-  for (let i = 0; i < password.length; i++) {
-    h ^= password.charCodeAt(i);
+  for (let i = 0; i < pw.length; i++) {
+    h ^= pw.charCodeAt(i);
     h = Math.imul(h, 0x01000193);
   }
   return (h >>> 0).toString(16).padStart(8, '0');
@@ -30,7 +32,7 @@ const getAccounts = (): AccountEntry[] => {
     const s = localStorage.getItem(ACCOUNTS_KEY);
     if (!s) return [];
     const parsed = JSON.parse(s);
-    // Migration: if old format was string[] — discard it
+    // Migration: discard old string[] format
     if (!Array.isArray(parsed) || (parsed.length > 0 && typeof parsed[0] === 'string')) {
       localStorage.removeItem(ACCOUNTS_KEY);
       return [];
@@ -39,42 +41,40 @@ const getAccounts = (): AccountEntry[] => {
   } catch { return []; }
 };
 
-const saveAccounts = (accounts: AccountEntry[]) => {
-  try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts)); } catch { /* ignore */ }
+const saveAccounts = (a: AccountEntry[]) => {
+  try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(a)); } catch { /* ignore */ }
 };
 
-const findAccount = (username: string): AccountEntry | undefined =>
+const findAccount = (username: string) =>
   getAccounts().find(a => a.username.toLowerCase() === username.toLowerCase());
 
-// ── Default profile ───────────────────────────────────────────────────────
-const defaultProfile: PlayerProfile = {
-  username: '',
-  rank: 1,
-  winsInCurrentRank: 0,
-  totalWins: 0,
-  totalLosses: 0,
-  tokens: 0,
-  unlockedItems: [],
-  isPro: false,
-  proExpiresAt: null,
-  proLastMonthlyGrant: null,
+// ── Per-user profile/avatar loaders ─────────────────────────────────────
+const DEFAULT_PROFILE = (username = ''): PlayerProfile => ({
+  username,
+  rank: 1, winsInCurrentRank: 0, totalWins: 0, totalLosses: 0,
+  tokens: 0, unlockedItems: [],
+  isPro: false, proExpiresAt: null, proLastMonthlyGrant: null,
   proMonthlyTokenAmount: PRO_MONTHLY_TOKENS,
-};
+});
 
-const loadProfile = (): PlayerProfile => {
+const loadUserProfile = (username: string): PlayerProfile => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    // Migration: if old single-profile key exists for this user, move it
+    const oldKey  = 'type_knight_profile';
+    const newKey  = profileKey(username);
+    const oldData = localStorage.getItem(oldKey);
+    if (oldData && !localStorage.getItem(newKey)) {
+      const old = JSON.parse(oldData);
+      if (old.username === username) {
+        localStorage.setItem(newKey, oldData);
+        localStorage.removeItem(oldKey);
+      }
+    }
+    const stored = localStorage.getItem(newKey);
     if (stored) {
       const p = JSON.parse(stored);
-      if (p.username) {
-        // If this username has no password account yet → wipe it (old password-less account)
-        if (!findAccount(p.username)) {
-          localStorage.removeItem(STORAGE_KEY);
-          return defaultProfile;
-        }
-      }
       return {
-        ...defaultProfile,
+        ...DEFAULT_PROFILE(username),
         ...p,
         tokens: p.tokens ?? 0,
         unlockedItems: p.unlockedItems ?? [],
@@ -85,29 +85,63 @@ const loadProfile = (): PlayerProfile => {
       };
     }
   } catch { /* ignore */ }
-  return defaultProfile;
+  return DEFAULT_PROFILE(username);
 };
 
-const loadAvatar = (): AvatarConfig => {
+const loadUserAvatar = (username: string): AvatarConfig => {
   try {
-    const stored = localStorage.getItem(AVATAR_KEY);
+    // Migration: move old avatar key
+    const oldKey  = 'type_knight_avatar';
+    const newKey  = avatarKey(username);
+    const oldData = localStorage.getItem(oldKey);
+    if (oldData && !localStorage.getItem(newKey)) {
+      localStorage.setItem(newKey, oldData);
+      localStorage.removeItem(oldKey);
+    }
+    const stored = localStorage.getItem(newKey);
     if (stored) return JSON.parse(stored);
   } catch { /* ignore */ }
   return DEFAULT_AVATAR;
 };
 
-const saveProfile = (profile: PlayerProfile) => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(profile)); } catch { /* ignore */ }
+const saveProfile = (p: PlayerProfile) => {
+  if (!p.username) return;
+  try {
+    localStorage.setItem(profileKey(p.username), JSON.stringify(p));
+    localStorage.setItem(SESSION_KEY, p.username);
+  } catch { /* ignore */ }
 };
 
-const saveAvatar = (config: AvatarConfig) => {
-  try { localStorage.setItem(AVATAR_KEY, JSON.stringify(config)); } catch { /* ignore */ }
+const saveAvatar = (username: string, cfg: AvatarConfig) => {
+  if (!username) return;
+  try { localStorage.setItem(avatarKey(username), JSON.stringify(cfg)); } catch { /* ignore */ }
+};
+
+// ── Initial load from session ─────────────────────────────────────────────
+const loadSessionProfile = (): PlayerProfile => {
+  try {
+    const username = localStorage.getItem(SESSION_KEY);
+    if (username && findAccount(username)) {
+      return loadUserProfile(username);
+    }
+  } catch { /* ignore */ }
+  return DEFAULT_PROFILE();
+};
+
+const loadSessionAvatar = (): AvatarConfig => {
+  try {
+    const username = localStorage.getItem(SESSION_KEY);
+    if (username && findAccount(username)) {
+      return loadUserAvatar(username);
+    }
+  } catch { /* ignore */ }
+  return DEFAULT_AVATAR;
 };
 
 // ── Hook ──────────────────────────────────────────────────────────────────
 export const usePlayerProfile = () => {
-  const [profile, setProfile] = useState<PlayerProfile>(loadProfile);
-  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(loadAvatar);
+  const [profile, setProfile]       = useState<PlayerProfile>(loadSessionProfile);
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(loadSessionAvatar);
 
   const isPro = useMemo(
     () => profile.isPro && profile.proExpiresAt !== null && profile.proExpiresAt > Date.now(),
@@ -120,7 +154,7 @@ export const usePlayerProfile = () => {
     return Date.now() - last >= 30 * 24 * 60 * 60 * 1000;
   }, [isPro, profile.proLastMonthlyGrant]);
 
-  // Returns 'ok' | 'taken'
+  // ── Register new account ──────────────────────────────────────────────
   const setUsername = useCallback((username: string, password: string): 'ok' | 'taken' => {
     if (findAccount(username)) return 'taken';
 
@@ -128,31 +162,43 @@ export const usePlayerProfile = () => {
     const now = Date.now();
     const hash = hashPassword(password);
 
-    // Register account
-    const accounts = getAccounts();
-    saveAccounts([...accounts, { username, hash }]);
+    saveAccounts([...getAccounts(), { username, hash }]);
+    localStorage.setItem(SESSION_KEY, username);
 
-    setProfile((prev) => {
-      const updated: PlayerProfile = {
-        ...prev,
-        username,
-        isPro: isFlixbee ? true : prev.isPro,
-        proExpiresAt: isFlixbee ? now + 3650 * 24 * 60 * 60 * 1000 : prev.proExpiresAt,
-        proMonthlyTokenAmount: isFlixbee ? FLIXBEE_MONTHLY_TOKENS : prev.proMonthlyTokenAmount,
-        tokens: isFlixbee ? prev.tokens + FLIXBEE_MONTHLY_TOKENS : prev.tokens,
-        proLastMonthlyGrant: isFlixbee ? now : prev.proLastMonthlyGrant,
-      };
-      saveProfile(updated);
-      return updated;
-    });
+    const initial = DEFAULT_PROFILE(username);
+    const withPerks: PlayerProfile = {
+      ...initial,
+      isPro:                isFlixbee ? true  : false,
+      proExpiresAt:         isFlixbee ? now + 3650 * 24 * 60 * 60 * 1000 : null,
+      proMonthlyTokenAmount:isFlixbee ? FLIXBEE_MONTHLY_TOKENS : PRO_MONTHLY_TOKENS,
+      tokens:               isFlixbee ? FLIXBEE_MONTHLY_TOKENS : 0,
+      proLastMonthlyGrant:  isFlixbee ? now : null,
+    };
+    saveProfile(withPerks);
+    setProfile(withPerks);
+    setAvatarConfig(DEFAULT_AVATAR);
+    return 'ok';
+  }, []);
+
+  // ── Log in to existing account ────────────────────────────────────────
+  const login = useCallback((username: string, password: string): 'ok' | 'wrong_password' | 'not_found' => {
+    const account = findAccount(username);
+    if (!account) return 'not_found';
+    if (account.hash !== hashPassword(password)) return 'wrong_password';
+
+    const userProfile = loadUserProfile(account.username); // use exact-case stored name
+    const userAvatar  = loadUserAvatar(account.username);
+    localStorage.setItem(SESSION_KEY, account.username);
+    setProfile(userProfile);
+    setAvatarConfig(userAvatar);
     return 'ok';
   }, []);
 
   const recordWin = useCallback((tokensEarned?: number) => {
     setProfile((prev) => {
       const newWins = prev.winsInCurrentRank + 1;
-      const rankUp = newWins >= WINS_PER_RANK;
-      const earned = tokensEarned ?? (BATTLE_TOKEN_BASE + prev.rank * BATTLE_TOKEN_PER_RANK);
+      const rankUp  = newWins >= WINS_PER_RANK;
+      const earned  = tokensEarned ?? (BATTLE_TOKEN_BASE + prev.rank * BATTLE_TOKEN_PER_RANK);
       const updated: PlayerProfile = {
         ...prev,
         rank: rankUp ? Math.min(prev.rank + 1, 7) : prev.rank,
@@ -187,16 +233,17 @@ export const usePlayerProfile = () => {
   }, []);
 
   const updateAvatar = useCallback((config: AvatarConfig) => {
-    saveAvatar(config);
+    saveAvatar(profile.username, config);
     setAvatarConfig(config);
-  }, []);
+  }, [profile.username]);
 
   const resetProfile = useCallback(() => {
-    saveProfile(defaultProfile);
-    saveAvatar(DEFAULT_AVATAR);
-    setProfile(defaultProfile);
+    const blank = DEFAULT_PROFILE(profile.username);
+    saveProfile(blank);
+    saveAvatar(profile.username, DEFAULT_AVATAR);
+    setProfile(blank);
     setAvatarConfig(DEFAULT_AVATAR);
-  }, []);
+  }, [profile.username]);
 
   const activatePro = useCallback((days: number) => {
     setProfile((prev) => {
@@ -212,15 +259,11 @@ export const usePlayerProfile = () => {
 
   const claimMonthlyTokens = useCallback(() => {
     setProfile((prev) => {
-      const now = Date.now();
+      const now  = Date.now();
       const last = prev.proLastMonthlyGrant ?? 0;
       if (now - last < 30 * 24 * 60 * 60 * 1000) return prev;
       const amount = prev.proMonthlyTokenAmount ?? PRO_MONTHLY_TOKENS;
-      const updated = {
-        ...prev,
-        tokens: prev.tokens + amount,
-        proLastMonthlyGrant: now,
-      };
+      const updated = { ...prev, tokens: prev.tokens + amount, proLastMonthlyGrant: now };
       saveProfile(updated);
       return updated;
     });
@@ -229,7 +272,7 @@ export const usePlayerProfile = () => {
   return {
     profile, avatarConfig,
     isPro, canClaimMonthly,
-    setUsername,
+    setUsername, login,
     recordWin, recordLoss, unlockItem, updateAvatar, resetProfile,
     activatePro, claimMonthlyTokens,
   };
