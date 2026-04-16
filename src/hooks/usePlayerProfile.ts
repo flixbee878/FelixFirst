@@ -118,25 +118,8 @@ const saveAvatar = (username: string, cfg: AvatarConfig) => {
 };
 
 // ── Initial load from session ─────────────────────────────────────────────
-const loadSessionProfile = (): PlayerProfile => {
-  try {
-    const username = localStorage.getItem(SESSION_KEY);
-    if (username && findAccount(username)) {
-      return loadUserProfile(username);
-    }
-  } catch { /* ignore */ }
-  return DEFAULT_PROFILE();
-};
-
-const loadSessionAvatar = (): AvatarConfig => {
-  try {
-    const username = localStorage.getItem(SESSION_KEY);
-    if (username && findAccount(username)) {
-      return loadUserAvatar(username);
-    }
-  } catch { /* ignore */ }
-  return DEFAULT_AVATAR;
-};
+const loadSessionProfile = (): PlayerProfile => DEFAULT_PROFILE();
+const loadSessionAvatar  = (): AvatarConfig  => DEFAULT_AVATAR;
 
 // ── Hook ──────────────────────────────────────────────────────────────────
 export const usePlayerProfile = () => {
