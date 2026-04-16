@@ -1,10 +1,44 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useGame } from '../store/GameContext';
 import { getRankName, getRankColor, RANK_NAMES, WINS_PER_RANK, RANK_COLORS } from '../constants/ranks';
 import { AvatarSVG } from '../components/avatar/AvatarSVG';
+import type { AvatarConfig } from '../types/avatar';
+import type { PlayerProfile } from '../types';
 
 export const ProfilePage = () => {
-  const { profile, avatarConfig, resetProfile } = useGame();
+  const { profile, avatarConfig, resetProfile, importSave } = useGame();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    const data = JSON.stringify({ profile, avatarConfig }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `typeknight-save-${profile.username}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string);
+        if (parsed.profile && parsed.avatarConfig) {
+          importSave(parsed.profile as PlayerProfile, parsed.avatarConfig as AvatarConfig);
+          alert('Save imported successfully!');
+        } else {
+          alert('Invalid save file.');
+        }
+      } catch { alert('Could not read save file.'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
   const rankColor = getRankColor(profile.rank);
   const winRate = profile.totalWins + profile.totalLosses > 0
     ? Math.round((profile.totalWins / (profile.totalWins + profile.totalLosses)) * 100)
@@ -189,6 +223,28 @@ export const ProfilePage = () => {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Save transfer */}
+      <div style={{
+        background: '#16213E', border: '4px solid #555', borderRadius: '16px',
+        padding: '20px', marginBottom: '20px', boxShadow: '4px 4px 0px #000',
+      }}>
+        <h2 style={{ fontFamily: '"Bangers", cursive', fontSize: '1.6rem', color: '#FFE234', letterSpacing: '2px', margin: '0 0 6px' }}>
+          💾 TRANSFER SAVE
+        </h2>
+        <p style={{ fontFamily: '"Fredoka One", cursive', color: '#888', fontSize: '0.85rem', margin: '0 0 14px' }}>
+          Moving between devices? Export your save at home, import it at school — or vice versa!
+        </p>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button className="cartoon-btn" onClick={handleExport} style={{ background: '#34C759', color: '#fff', flex: 1 }}>
+            ⬇️ Export Save
+          </button>
+          <button className="cartoon-btn" onClick={() => fileInputRef.current?.click()} style={{ background: '#007AFF', color: '#fff', flex: 1 }}>
+            ⬆️ Import Save
+          </button>
+          <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
         </div>
       </div>
 

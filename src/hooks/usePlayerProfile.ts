@@ -253,11 +253,19 @@ export const usePlayerProfile = () => {
     });
   }, []);
 
+  const importSave = useCallback((savedProfile: PlayerProfile, savedAvatar: AvatarConfig) => {
+    const merged = { ...savedProfile, username: profile.username };
+    saveProfile(merged);
+    saveAvatar(profile.username, savedAvatar);
+    setProfile(merged);
+    setAvatarConfig(savedAvatar);
+  }, [profile.username]);
+
   return {
     profile, avatarConfig,
     isPro, canClaimMonthly,
     setUsername, login,
     recordWin, recordLoss, unlockItem, updateAvatar, resetProfile,
-    activatePro, claimMonthlyTokens,
+    activatePro, claimMonthlyTokens, importSave,
   };
 };

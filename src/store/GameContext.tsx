@@ -17,6 +17,7 @@ interface GameContextValue {
   resetProfile: () => void;
   activatePro: (days: number) => void;
   claimMonthlyTokens: () => void;
+  importSave: (profile: PlayerProfile, avatar: AvatarConfig) => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
