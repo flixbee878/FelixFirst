@@ -7,7 +7,7 @@ import type { AvatarConfig } from '../types/avatar';
 import type { PlayerProfile } from '../types';
 
 export const ProfilePage = () => {
-  const { profile, avatarConfig, resetProfile, importSave } = useGame();
+  const { profile, avatarConfig, resetProfile, importSave, signOut } = useGame();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -248,14 +248,19 @@ export const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Reset button */}
-      <div style={{ textAlign: 'center' }}>
+      {/* Sign out + Reset */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <button
+          className="cartoon-btn"
+          onClick={() => signOut()}
+          style={{ background: '#1A1A2E', border: '3px solid #FFE234', color: '#FFE234', fontSize: '1.05rem', padding: '12px 32px', width: '100%' }}
+        >
+          🚪 Sign Out
+        </button>
         <button
           className="cartoon-btn"
           onClick={() => {
-            if (window.confirm('Reset all progress? This cannot be undone!')) {
-              resetProfile();
-            }
+            if (window.confirm('Reset all progress? This cannot be undone!')) resetProfile();
           }}
           style={{ background: '#FF3B30', color: '#fff', fontSize: '0.95rem' }}
         >
