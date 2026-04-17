@@ -2,14 +2,17 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { usePlayerProfile } from '../hooks/usePlayerProfile';
 import type { PlayerProfile } from '../types';
 import type { AvatarConfig } from '../types/avatar';
+import type { RegisterResult, LoginResult } from '../lib/authService';
 
 interface GameContextValue {
   profile: PlayerProfile;
   avatarConfig: AvatarConfig;
+  loading: boolean;
   isPro: boolean;
   canClaimMonthly: boolean;
-  setUsername: (username: string, password: string) => 'ok' | 'taken';
-  login: (username: string, password: string) => 'ok' | 'wrong_password' | 'not_found';
+  setUsername: (username: string, password: string) => Promise<RegisterResult>;
+  login: (username: string, password: string) => Promise<LoginResult>;
+  signOut: () => Promise<void>;
   recordWin: (tokensEarned?: number) => void;
   recordLoss: () => void;
   unlockItem: (itemId: string, cost: number) => void;

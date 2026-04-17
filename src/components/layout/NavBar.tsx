@@ -5,7 +5,7 @@ import { WINS_PER_RANK } from '../../constants/ranks';
 import { AvatarSVG } from '../avatar/AvatarSVG';
 
 export const NavBar = () => {
-  const { profile, avatarConfig, isPro } = useGame();
+  const { profile, avatarConfig, isPro, signOut } = useGame();
   const location = useLocation();
   const rankColor = getRankColor(profile.rank);
 
@@ -112,6 +112,15 @@ export const NavBar = () => {
         }}>
           {getRankName(profile.rank)} {profile.winsInCurrentRank}/{WINS_PER_RANK}⭐
         </div>
+
+        {/* Sign out */}
+        <button onClick={() => signOut()} style={{
+          background: '#2a2a4a', border: '2px solid #555', borderRadius: '8px',
+          padding: '4px 10px', fontFamily: '"Fredoka One", cursive', fontSize: '0.8rem',
+          color: '#aaa', cursor: 'pointer',
+        }}>
+          🚪 Out
+        </button>
 
         {/* Mini avatar */}
         <Link to="/avatar" style={{ display: 'block', textDecoration: 'none' }}>
