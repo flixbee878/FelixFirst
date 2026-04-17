@@ -33,7 +33,6 @@ export const usePlayerProfile = () => {
     return Date.now() - (profile.proLastMonthlyGrant ?? 0) >= 30 * 24 * 60 * 60 * 1000;
   }, [isPro, profile.proLastMonthlyGrant]);
 
-  // ── Auth ─────────────────────────────────────────────────────────────────
   const setUsername = useCallback(async (username: string, password: string): Promise<RegisterResult> => {
     setLoading(true);
     const result = await registerUser(username, password);
@@ -56,28 +55,20 @@ export const usePlayerProfile = () => {
     return result;
   }, []);
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
   const applyAndSave = useCallback((updater: (prev: PlayerProfile) => PlayerProfile) => {
     setProfile(prev => {
       const updated = updater(prev);
-      dbSaveProfile(updated); // fire-and-forget
+      dbSaveProfile(updated);
       return updated;
     });
   }, []);
 
-  // ── Game actions ──────────────────────────────────────────────────────────
   const recordWin = useCallback((tokensEarned?: number) => {
     applyAndSave(prev => {
       const newWins = prev.winsInCurrentRank + 1;
       const rankUp  = newWins >= WINS_PER_RANK;
       const earned  = tokensEarned ?? (BATTLE_TOKEN_BASE + prev.rank * BATTLE_TOKEN_PER_RANK);
-      return {
-        ...prev,
-        rank: rankUp ? Math.min(prev.rank + 1, 7) : prev.rank,
-        winsInCurrentRank: rankUp ? 0 : newWins,
-        totalWins: prev.totalWins + 1,
-        tokens: prev.tokens + earned,
-      };
+      return { ...prev, rank: rankUp ? Math.min(prev.rank + 1, 7) : prev.rank, winsInCurrentRank: rankUp ? 0 : newWins, totalWins: prev.totalWins + 1, tokens: prev.tokens + earned };
     });
   }, [applyAndSave]);
 
@@ -106,16 +97,12 @@ export const usePlayerProfile = () => {
   }, [profile.username]);
 
   const activatePro = useCallback((days: number) => {
-    applyAndSave(prev => ({
-      ...prev,
-      isPro: true,
-      proExpiresAt: Date.now() + days * 24 * 60 * 60 * 1000,
-    }));
+    applyAndSave(prev => ({ ...prev, isPro: true, proExpiresAt: Date.now() + days * 24 * 60 * 60 * 1000 }));
   }, [applyAndSave]);
 
   const claimMonthlyTokens = useCallback(() => {
     applyAndSave(prev => {
-      const now  = Date.now();
+      const now = Date.now();
       if (now - (prev.proLastMonthlyGrant ?? 0) < 30 * 24 * 60 * 60 * 1000) return prev;
       const amount = prev.proMonthlyTokenAmount ?? PRO_MONTHLY_TOKENS;
       return { ...prev, tokens: prev.tokens + amount, proLastMonthlyGrant: now };
