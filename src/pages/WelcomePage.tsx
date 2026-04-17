@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGame } from '../store/GameContext';
 import { FLIXBEE_USERNAME, FLIXBEE_MONTHLY_TOKENS } from '../constants/avatarParts';
 
@@ -14,6 +15,7 @@ const passwordStrength = (pw: string): { label: string; color: string; bars: num
 
 export const WelcomePage = () => {
   const { setUsername, login, loading } = useGame();
+  const navigate = useNavigate();
   const [mode, setMode]       = useState<'create' | 'login'>('create');
   const [name, setName]       = useState('');
   const [pass, setPass]       = useState('');
@@ -39,6 +41,7 @@ export const WelcomePage = () => {
     if (pass !== confirm) return setError('Passwords do not match!');
 
     const result = await setUsername(n, pass);
+    if (result === 'ok') { navigate('/'); return; }
     if (result === 'taken') setError(`"${n}" is already taken — pick another name!`);
     if (result === 'error') setError('Something went wrong — please try again.');
   };
@@ -48,6 +51,7 @@ export const WelcomePage = () => {
     if (!name.trim()) return setError('Enter your username!');
     if (!pass) return setError('Enter your password!');
     const result = await login(name.trim(), pass);
+    if (result === 'ok') { navigate('/'); return; }
     if (result === 'error') setError('Wrong username or password — try again!');
   };
 
