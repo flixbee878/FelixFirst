@@ -43,6 +43,7 @@ export const WelcomePage = () => {
     const result = await setUsername(n, pass);
     if (result === 'ok') { navigate('/'); return; }
     if (result === 'taken') setError(`"${n}" is already taken — pick another name!`);
+    if (result === 'confirm_required') setError('Server misconfiguration: email confirmation is enabled. Ask the admin to disable it in Supabase.');
     if (result === 'error') setError('Something went wrong — please try again.');
   };
 

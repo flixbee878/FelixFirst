@@ -6,7 +6,7 @@ import { VIP_USERNAMES, FLIXBEE_USERNAME, FLIXBEE_MONTHLY_TOKENS, PRO_MONTHLY_TO
 
 const toEmail = (username: string) => `${username.toLowerCase()}@typeknight.game`;
 
-export type RegisterResult = 'ok' | 'taken' | 'error';
+export type RegisterResult = 'ok' | 'taken' | 'confirm_required' | 'error';
 export type LoginResult = 'ok' | 'error';
 
 const buildDefaultProfile = (username: string): PlayerProfile => {
@@ -63,6 +63,9 @@ export const registerUser = async (username: string, password: string): Promise<
   }
   if (!data.user) return 'error';
 
+  // Email confirmation is enabled in Supabase — can't proceed without a session
+  if (!data.session) return 'confirm_required';
+
   const profile = buildDefaultProfile(username);
   const [profRes, avRes] = await Promise.all([
     supabase.from('profiles').insert(profileToRow(data.user.id, profile)),
@@ -74,8 +77,16 @@ export const registerUser = async (username: string, password: string): Promise<
 };
 
 export const loginUser = async (username: string, password: string): Promise<LoginResult> => {
-  const { error } = await supabase.auth.signInWithPassword({ email: toEmail(username), password });
-  return error ? 'error' : 'ok';
+  const { data, error } = await supabase.auth.signInWithPassword({ email: toEmail(username), password });
+  if (error) {
+    console.error('[auth] signIn error:', error.message, error.code);
+    return 'error';
+  }
+  if (!data.session) {
+    console.error('[auth] signIn returned no session — email confirmation may be required');
+    return 'error';
+  }
+  return 'ok';
 };
 
 export const fetchCurrentUser = async (): Promise<{ profile: PlayerProfile; avatar: AvatarConfig } | null> => {
