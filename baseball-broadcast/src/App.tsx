@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { StoreProvider } from './store';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
@@ -13,7 +13,7 @@ import { AboutPage } from './pages/AboutPage';
 function App() {
   return (
     <StoreProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
@@ -27,7 +27,7 @@ function App() {
             <Route path="*" element={<HomePage />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </StoreProvider>
   );
 }
